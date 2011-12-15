@@ -41,4 +41,6 @@ public class SeekableByteArrayInput
   public long tell() throws IOException {
     return this.pos;
   }
+
+  byte[] getBuffer() { return buf; }
 }

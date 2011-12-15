@@ -19,15 +19,55 @@ package org.apache.trevni;
 
 import java.io.IOException;
 import java.io.Closeable;
+import java.io.File;
 
 /** */
 public class TrevniReader implements Closeable {
+  private InputBuffer in;
 
+  private long rowCount;
+  private long columnCount;
+
+  public TrevniReader(File file) throws IOException {
+    this(new SeekableFileInput(file));
+  }
+
+  public TrevniReader(SeekableInput in) throws IOException {
+    this.in = new InputBuffer(in);
+    readHeader();
+  }
+
+  public long rowCount() { return rowCount; }
+  public long columnCount() { return columnCount; }
+
+  private void readHeader() throws IOException {
+    in.seek(0);
+
+    readMagic();
+
+    this.rowCount = in.readLong();
+    this.columnCount = in.readLong();
+    
+    //readColumnDescriptors();
+
+  }
+
+  private void readMagic() throws IOException {
+    byte[] magic = new byte[TrevniWriter.MAGIC.length];
+    in.readFully(magic);
+    try {
+      vin.readFixed(magic);                         // read magic
+    } catch (IOException e) {
+      throw new IOException("Not a data file.");
+    }
+    if (!Arrays.equals(TrevniWriter.MAGIC, magic))
+      throw new IOException("Not a data file.");
+  }
 
   /** Close this reader. */
   @Override
   public void close() throws IOException {
-    // ???
+    in.close();
   }
 
 }
