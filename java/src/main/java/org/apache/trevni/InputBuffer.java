@@ -20,12 +20,13 @@ package org.apache.trevni;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Closeable;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 /** */
 
-class InputBuffer {
+class InputBuffer implements Closeable {
   private SeekableInput in;
 
   private long inLength;
@@ -35,29 +36,15 @@ class InputBuffer {
   private int pos;                                // position within buffer
   private int limit;                              // end of valid buffer data
 
-  public InputBuffer(SeekableInput in) {
+  public InputBuffer(SeekableInput in) throws IOException {
     this.in = in;
     this.inLength = in.length();
 
     if (in instanceof SeekableByteArrayInput) {   // use buffer directly
       this.buf = ((SeekableByteArrayInput)in).getBuffer();
-      this.limit = in.length();
+      this.limit = (int)in.length();
     } else {                                      // create new buffer
-      this.buf = new byte[8192];
-    }
-  }
-
-  public void readFully(byte[] bytes, int start, int length) throws IOException {
-    int remaining = limit - pos;
-    if (length <= remaining) {
-      System.arraycopy(buf, pos, bytes, start, length);
-      pos += length;
-    } else {                                      // read remainder of buffer
-      System.arraycopy(buf, pos, bytes, start, remaining);
-      start += remaining;
-      length -= remaining;
-      pos = limit;
-      in.readFully(bytes, start, length);         // finish from input
+      this.buf = new byte[8192];                  // big enough for primitives
     }
   }
 
@@ -65,15 +52,17 @@ class InputBuffer {
 
   public long length() { return inLength; }
 
-  public void seek(long position) {
+  public void seek(long position) throws IOException {
     if (position >= offset && position <= tell()) {
-      pos = position - offset;                    // seek in buffer;
+      pos = (int)(position - offset);             // seek in buffer;
       return;
     }
     pos = 0;
     limit = 0;
     in.seek(position);
   }
+
+  public void close() throws IOException { in.close(); }
 
   public int readInt() throws IOException {
     ensure(5);                               // won't throw index out of bounds
@@ -100,10 +89,9 @@ class InputBuffer {
       }
     }
     pos += len;
-    if (pos > limit) {
+    if (pos > limit)
       throw new EOFException();
-    }
-    return (n >>> 1) ^ -(n & 1); // back to two's-complement
+    return (n >>> 1) ^ -(n & 1);                  // back to two's-complement
   }
 
   public long readLong() throws IOException {
@@ -176,30 +164,35 @@ class InputBuffer {
   }
 
   public float readFloat() throws IOException {
+    return Float.intBitsToFloat(readFixed32());
+  }
+
+  public int readFixed32() throws IOException {
     ensure(4);
     int len = 1;
     int n = (buf[pos] & 0xff) | ((buf[pos + len++] & 0xff) << 8)
         | ((buf[pos + len++] & 0xff) << 16) | ((buf[pos + len++] & 0xff) << 24);
-    if ((pos + 4) > limit) {
+    if ((pos + 4) > limit)
       throw new EOFException();
-    }
     pos += 4;
-    return Float.intBitsToFloat(n);
+    return n;
   }
 
   public double readDouble() throws IOException {
+    return Double.longBitsToDouble(readFixed64());
+  }
+
+  public long readFixed64() throws IOException {
     ensure(8);
     int len = 1;
     int n1 = (buf[pos] & 0xff) | ((buf[pos + len++] & 0xff) << 8)
         | ((buf[pos + len++] & 0xff) << 16) | ((buf[pos + len++] & 0xff) << 24);
     int n2 = (buf[pos + len++] & 0xff) | ((buf[pos + len++] & 0xff) << 8)
         | ((buf[pos + len++] & 0xff) << 16) | ((buf[pos + len++] & 0xff) << 24);
-    if ((pos + 8) > limit) {
+    if ((pos + 8) > limit)
       throw new EOFException();
-    }
     pos += 8;
-    return Double.longBitsToDouble((((long) n1) & 0xffffffffL)
-        | (((long) n2) << 32));
+    return (((long) n1) & 0xffffffffL) | (((long) n2) << 32);
   }
 
   private ByteBuffer scratch = ByteBuffer.allocate(16);
@@ -211,11 +204,9 @@ class InputBuffer {
   }  
 
   public byte[] readBytes() throws IOException {
-    int length = readInt();
-    result = new byte[length];
-    readFully(result, 0, length);
+    byte[] result = new byte[readInt()];
+    readFully(result);
     return result;
-
   }
 
   public ByteBuffer readBytes(ByteBuffer old) throws IOException {
@@ -240,27 +231,53 @@ class InputBuffer {
     seek(tell()+length);
   }
 
-  private void ensure(int num) throws IOException {
-    int remaining = limit - pos;
-    if (remaining < num) {                       // move remaining to front
-      System.arraycopy(buf, pos, buf, 0, remaining); 
+  private void ensure(int n) throws IOException {
+    int buffered = limit - pos;
+    if (buffered < n) {                             // not enough in buffer
+      System.arraycopy(buf, pos, buf, 0, buffered); // move buffered to front
       pos = 0;
-      limit = remaining + tryRead(buf, start+remaining, buf.length-remaining);
+      limit = buffered;
+      int remaining = n - buffered;
+      try {
+        while (remaining > 0) {                     // buffer more
+          int read = in.read(buf, limit, Math.max(remaining, buf.length));
+          if (read < 0) break;
+          remaining -= read;
+          limit += read;
+        }
+      } catch (EOFException eof) {}        
     }
   }
 
-  private int tryRead(byte[] data, int off, int len) throws IOException {
-    int remaining = len;
-    try {
-      while (remaining > 0) {
-        int read = in.read(data, off, remaining);
-        if (read < 0)
-          break;
-        remaining -= read;
-        off += read;
+  public void readFully(byte[] bytes) throws IOException {
+    readFully(bytes, 0, bytes.length);
+  }
+
+  public void readFully(byte[] bytes, int start, int len) throws IOException {
+    int buffered = limit - pos;
+    if (len > buffered) {                        // buffer is insufficient
+
+      System.arraycopy(buf, pos, bytes, start, buffered); // consume buffer
+      start += buffered;
+      len -= buffered;
+      pos += buffered;
+      if (len > buf.length) {                     // bigger than buffer
+        do {
+          int read = in.read(bytes, start, len);  // read directly into result
+          if (read < 0) throw new EOFException();
+          len -= read;
+          start += read;
+        } while (len > 0);
+        return;
       }
-    } catch (EOFException eof) {}
-    return len - remaining;
+
+      limit = in.read(buf, 0, buf.length);        // refill buffer
+      if (limit < 0) throw new EOFException();
+      pos = 0;
+    }
+
+    System.arraycopy(buf, pos, bytes, start, len); // copy from buffer
+    pos += len;
   }
 
 }

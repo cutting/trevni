@@ -30,21 +30,39 @@ public class ColumnMetaData extends MetaData {
   static final String TYPE_KEY = RESERVED_KEY_PREFIX + "type";
   static final String VALUES_KEY = RESERVED_KEY_PREFIX + "values";
 
+  // cache these values for better performance
+  private String name;
+  private ValueType type;
+  private boolean values;
+
+  private ColumnMetaData() {}                     // non-public ctor
   public ColumnMetaData(String name, ValueType type) {
-    put(NAME_KEY, name.getBytes(InputBuffer.Charset);
-    put(TYPE_KEY, type.getName());
+    this.name = name;
+    setReserved(NAME_KEY, name);
+    this.type = type;
+    setReserved(TYPE_KEY, type.getName());
   }
 
-  public String getName() { return getString(NAME_KEY); }
-  public ValueType getType() { return getString(TYPE_KEY); }
+  public String getName() { return name; }
+  public ValueType getType() { return type; }
 
   public ColumnMetaData setValues(boolean values) {
+    this.values = values;
     if (values)
-      put(VALUES_KEY, new byte[0]);
+      setReserved(VALUES_KEY, "");
     else
       remove(VALUES_KEY);
     return this;
   }
   public boolean getValues(String values) { return get(VALUES_KEY) != null; }
+
+  static ColumnMetaData read(InputBuffer in) throws IOException {
+    ColumnMetaData result = new ColumnMetaData();
+    MetaData.read(in, result);
+    result.name = result.getString(NAME_KEY);
+    result.type = ValueType.valueOf(result.getString(TYPE_KEY));
+    result.values = result.get(VALUES_KEY) != null;
+    return result;
+  }
 
 }

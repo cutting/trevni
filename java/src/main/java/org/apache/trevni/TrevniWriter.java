@@ -28,7 +28,6 @@ import java.util.List;
 public class TrevniWriter {
 
   static final byte[] MAGIC = new byte[] {'C', 'o', 'l', 0};
-  static final int DEFAULT_BLOCK_SIZE = 64 * 1024;
 
   private ColumnMetaData[] columns;
   private List<OutputBuffer>[] blocks;
@@ -36,25 +35,27 @@ public class TrevniWriter {
 
   public TrevniWriter(ColumnMetaData... columns) throws IOException {
     this.columns = columns;
-    this.blocks = new ArrayList<OutputBuffer>[columns.size];
+    this.blocks = new ArrayList[columns.length];
     for (int i = 0; i < columns.length; i++) {
-      blocks[i] = new OutputBuffer();
+      blocks[i] = new ArrayList<OutputBuffer>();
+      blocks[i].add(new OutputBuffer());
     }
   }
 
   public void writeRow(Object... row) throws IOException {
     for (int column = 0; column < columns.length; column++)
-      getLastBlock(column).addValue(row[i]);
+      getLastBlock(column).writeValue(row[column], columns[column]);
     rows++;
   }
 
   private OutputBuffer getLastBlock(int column) {
-    List<OutputBuffer> blocks = blocks[column];
-    OutputBuffer last = blocks.get(blocks.size()-1);
+    List<OutputBuffer> all = blocks[column];
+    OutputBuffer last = all.get(all.size()-1);
     if (last.isFull()) {                          // last is full
       last = new OutputBuffer();                  // add a new block to column
-      blocks.add(last);
+      all.add(last);
     }
+    return last;
   }
 
   /** Write a column file. */
@@ -62,7 +63,7 @@ public class TrevniWriter {
     writeHeader(out);
     
     for (int column = 0; column < columns.length; column++)
-      writeColumn(columns[i], buffers[i], out);
+      writeColumn(columns[column], blocks[column], out);
   }
 
   private void writeHeader(OutputStream out) throws IOException {
@@ -84,17 +85,17 @@ public class TrevniWriter {
   }
 
   private long[] computeStarts(long start) {
-    start += columns.length * 8;                  // room for starts
-
     long[] result = new long[columns.length];
+    start += columns.length * 8;                  // room for starts
     for (int column = 0; column < columns.length; column++) {
-      starts[column] = start;
+      result[column] = start;
       start += 8;                                 // block count
       for (OutputBuffer block : blocks[column]) {
         start += 8 * 3;                           // count & sizes
         start += block.size();
       }
     }
+    return result;
   }
 
   private void writeColumn(ColumnMetaData column,

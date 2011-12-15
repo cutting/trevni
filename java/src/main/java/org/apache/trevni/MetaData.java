@@ -19,7 +19,7 @@ package org.apache.trevni;
 
 import java.io.IOException;
 import java.io.Closeable;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Map;
 import java.util.LinkedHashMap;
@@ -29,17 +29,13 @@ public class MetaData extends LinkedHashMap<String,byte[]> {
 
   static final String RESERVED_KEY_PREFIX = "trevni.";
 
+  private static final Charset UTF8 = Charset.forName("UTF-8");
+
   /** Return the value of a metadata property as a String. */
   public String getString(String key) {
     byte[] value = get(key);
-    if (value == null) {
-      return null;
-    }
-    try {
-      return new String(value, "UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    }
+    if (value == null) return null;
+    return new String(value, UTF8);
   }
 
   /** Return the value of a metadata property as a long. */
@@ -55,7 +51,7 @@ public class MetaData extends LinkedHashMap<String,byte[]> {
     put(key, value);
     return this;
   }
-  
+
   /** Test if a metadata key is reserved. */
   public static boolean isReserved(String key) {
     return key.startsWith(RESERVED_KEY_PREFIX);
@@ -63,11 +59,11 @@ public class MetaData extends LinkedHashMap<String,byte[]> {
 
   /** Set a metadata property to a String value. */
   public MetaData set(String key, String value) {
-    try {
-      return set(key, value.getBytes("UTF-8"));
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    }
+    return set(key, value.getBytes(UTF8));
+  }
+
+  void setReserved(String key, String value) {
+    put(key, value.getBytes(UTF8));
   }
 
   /** Set a metadata property to a long value. */
@@ -75,7 +71,7 @@ public class MetaData extends LinkedHashMap<String,byte[]> {
     return set(key, Long.toString(value));
   }
 
-  void write(OutputBuffer out) {
+  void write(OutputBuffer out) throws IOException {
     out.writeInt(size());
     for (Map.Entry<String,byte[]> e : entrySet()) {
       out.writeString(e.getKey());
@@ -83,7 +79,7 @@ public class MetaData extends LinkedHashMap<String,byte[]> {
     }
   }
 
-  static void read(InputBuffer in, MetaData metaData) {
+  static void read(InputBuffer in, MetaData metaData) throws IOException {
     int size = in.readInt();
     for (int i = 0; i < size; i++)
       metaData.put(in.readString(), in.readBytes());

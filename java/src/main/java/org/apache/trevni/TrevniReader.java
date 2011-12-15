@@ -20,6 +20,7 @@ package org.apache.trevni;
 import java.io.IOException;
 import java.io.Closeable;
 import java.io.File;
+import java.util.Arrays;
 
 /** */
 public class TrevniReader implements Closeable {
@@ -54,9 +55,8 @@ public class TrevniReader implements Closeable {
 
   private void readMagic() throws IOException {
     byte[] magic = new byte[TrevniWriter.MAGIC.length];
-    in.readFully(magic);
     try {
-      vin.readFixed(magic);                         // read magic
+      in.readFully(magic);
     } catch (IOException e) {
       throw new IOException("Not a data file.");
     }

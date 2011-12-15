@@ -31,13 +31,13 @@ public class FileMetaData extends MetaData {
 
   public String getCodec(String codec) { return getString(CODEC_KEY); }
   public FileMetaData setCodec(String codec) {
-    put(CODEC_KEY, codec);
+    setReserved(CODEC_KEY, codec);
     return this;
   }
    
   public String getChecksum(String checksum) { return getString(CHECKSUM_KEY); }
   public FileMetaData setChecksum(String checksum) {
-    put(CHECKSUM_KEY, checksum);
+    setReserved(CHECKSUM_KEY, checksum);
     return this;
   }
 

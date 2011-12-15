@@ -21,20 +21,22 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 /** */
 
 class OutputBuffer extends ByteArrayOutputStream {
+  static final int BLOCK_SIZE = 64 * 1024;
+
   private long valueCount;
 
-  public OutputBuffer() {
-    super(TrevniWriter.BLOCK_SIZE + TrevniWriter.BLOCK_SIZE >> 3);
-  }
+  public OutputBuffer() { super(BLOCK_SIZE + BLOCK_SIZE >> 2); }
 
   public long getValueCount() { return valueCount; }
 
-  public boolean isFull() { return size() >= TrevniWriter.BLOCK_SIZE; }
+  public boolean isFull() { return size() >= BLOCK_SIZE; }
 
   public void writeValue(Object value, ColumnMetaData column)
     throws IOException {
@@ -65,12 +67,14 @@ class OutputBuffer extends ByteArrayOutputStream {
     valueCount++;
   }
 
+  private static final Charset UTF8 = Charset.forName("UTF-8");
+
   public void writeString(String string) throws IOException {
     if (0 == string.length()) {
       write(0);
       return;
     }
-    byte[] bytes = string.getBytes("UTF-8");
+    byte[] bytes = string.getBytes(UTF8);
     writeInt(bytes.length);
     write(bytes, 0, bytes.length);
   }
@@ -103,99 +107,81 @@ class OutputBuffer extends ByteArrayOutputStream {
     writeFixed64(Double.doubleToRawLongBits(d));
   }
 
-  private final byte[] bytes = new byte[12];
-  
   public void writeFixed32(int i) throws IOException {
-    bytes[0] = (byte)((i       ) & 0xFF);
-    bytes[1] = (byte)((i >>>  8) & 0xFF);
-    bytes[2] = (byte)((i >>> 16) & 0xFF);
-    bytes[3] = (byte)((i >>> 24) & 0xFF);
-    write(bytes, 0, 4);
+    ensure(4);
+    buf[count  ] = (byte)((i       ) & 0xFF);
+    buf[count+1] = (byte)((i >>>  8) & 0xFF);
+    buf[count+2] = (byte)((i >>> 16) & 0xFF);
+    buf[count+3] = (byte)((i >>> 24) & 0xFF);
+    count += 4;
   }
 
   public void writeFixed64(long l) throws IOException {
+    ensure(8);
     int first = (int)(l & 0xFFFFFFFF);
     int second = (int)((l >>> 32) & 0xFFFFFFFF);
-    bytes[0] = (byte)((first        ) & 0xFF);
-    bytes[4] = (byte)((second       ) & 0xFF);
-    bytes[5] = (byte)((second >>>  8) & 0xFF);
-    bytes[1] = (byte)((first >>>   8) & 0xFF);
-    bytes[2] = (byte)((first >>>  16) & 0xFF);
-    bytes[6] = (byte)((second >>> 16) & 0xFF);
-    bytes[7] = (byte)((second >>> 24) & 0xFF);
-    bytes[3] = (byte)((first >>>  24) & 0xFF);
-    write(bytes, 0, 8);
+    buf[count+0] = (byte)((first        ) & 0xFF);
+    buf[count+4] = (byte)((second       ) & 0xFF);
+    buf[count+5] = (byte)((second >>>  8) & 0xFF);
+    buf[count+1] = (byte)((first >>>   8) & 0xFF);
+    buf[count+2] = (byte)((first >>>  16) & 0xFF);
+    buf[count+6] = (byte)((second >>> 16) & 0xFF);
+    buf[count+7] = (byte)((second >>> 24) & 0xFF);
+    buf[count+3] = (byte)((first >>>  24) & 0xFF);
+    count += 8;
   }
 
   public void writeInt(int n) throws IOException {
+    ensure(5);
     n = (n << 1) ^ (n >> 31);                     // move sign to low-order bit
-    if ((n & ~0x7F) == 0) {                       // optimize one-byte case
-      write(n);
-      return;
-    } else if ((n & ~0x3FFF) == 0) {              // optimize two-byte case
-      write(0x80 | n);
-      write(n >>> 7);
-      return;
-    }
-    int start = pos;                              // unroll general case
     if ((n & ~0x7F) != 0) {
-      bytes[pos++] = (byte)((n | 0x80) & 0xFF);
+      buf[count++] = (byte)((n | 0x80) & 0xFF);
       n >>>= 7;
       if (n > 0x7F) {
-        bytes[pos++] = (byte)((n | 0x80) & 0xFF);
+        buf[count++] = (byte)((n | 0x80) & 0xFF);
         n >>>= 7;
         if (n > 0x7F) {
-          bytes[pos++] = (byte)((n | 0x80) & 0xFF);
+          buf[count++] = (byte)((n | 0x80) & 0xFF);
           n >>>= 7;
           if (n > 0x7F) {
-            bytes[pos++] = (byte)((n | 0x80) & 0xFF);
+            buf[count++] = (byte)((n | 0x80) & 0xFF);
             n >>>= 7;
           }
         }
       }
     } 
-    bytes[pos++] = (byte) n;
-    write(bytes, 0, pos - start);
+    buf[count++] = (byte) n;
   }
 
   public void writeLong(long n) throws IOException {
+    ensure(10);
     n = (n << 1) ^ (n >> 63);                     // move sign to low-order bit
-    if ((n & ~0x7FFFFFFFL) == 0) {                // optimize 32-bit case
-      int i = (int) n;
-      while ((i & ~0x7F) != 0) {
-        write((byte)((0x80 | i) & 0xFF));
-        i >>>= 7;
-      }
-      write((byte)i);
-      return;
-    }
-    int start = pos;                              // unroll general case
     if ((n & ~0x7FL) != 0) {
-      bytes[pos++] = (byte)((n | 0x80) & 0xFF);
+      buf[count++] = (byte)((n | 0x80) & 0xFF);
       n >>>= 7;
       if (n > 0x7F) {
-        bytes[pos++] = (byte)((n | 0x80) & 0xFF);
+        buf[count++] = (byte)((n | 0x80) & 0xFF);
         n >>>= 7;
         if (n > 0x7F) {
-          bytes[pos++] = (byte)((n | 0x80) & 0xFF);
+          buf[count++] = (byte)((n | 0x80) & 0xFF);
           n >>>= 7;
           if (n > 0x7F) {
-            bytes[pos++] = (byte)((n | 0x80) & 0xFF);
+            buf[count++] = (byte)((n | 0x80) & 0xFF);
             n >>>= 7;
             if (n > 0x7F) {
-              bytes[pos++] = (byte)((n | 0x80) & 0xFF);
+              buf[count++] = (byte)((n | 0x80) & 0xFF);
               n >>>= 7;
               if (n > 0x7F) {
-                bytes[pos++] = (byte)((n | 0x80) & 0xFF);
+                buf[count++] = (byte)((n | 0x80) & 0xFF);
                 n >>>= 7;
                 if (n > 0x7F) {
-                  bytes[pos++] = (byte)((n | 0x80) & 0xFF);
+                  buf[count++] = (byte)((n | 0x80) & 0xFF);
                   n >>>= 7;
                   if (n > 0x7F) {
-                    bytes[pos++] = (byte)((n | 0x80) & 0xFF);
+                    buf[count++] = (byte)((n | 0x80) & 0xFF);
                     n >>>= 7;
                     if (n > 0x7F) {
-                      bytes[pos++] = (byte)((n | 0x80) & 0xFF);
+                      buf[count++] = (byte)((n | 0x80) & 0xFF);
                       n >>>= 7;
                     }
                   }
@@ -206,8 +192,12 @@ class OutputBuffer extends ByteArrayOutputStream {
         }
       }
     }
-    bytes[pos++] = (byte) n;
-    write(bytes, 0, pos - start);
+    buf[count++] = (byte) n;
   }
   
+  private void ensure(int n) {
+    if (count + n > buf.length)
+      buf = Arrays.copyOf(buf, Math.max(buf.length << 1, count + n));
+  }
+
 }
