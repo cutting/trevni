@@ -19,6 +19,7 @@ package org.apache.trevni;
 
 import java.io.IOException;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.OutputStream;
 
 import java.util.ArrayList;
@@ -56,6 +57,16 @@ public class TrevniWriter {
       all.add(last);
     }
     return last;
+  }
+
+  /** Write a column file. */
+  public void writeTo(File file) throws IOException {
+    OutputStream out = new FileOutputStream(file);
+    try {
+      writeTo(out);
+    } finally {
+      out.close();
+    }
   }
 
   /** Write a column file. */

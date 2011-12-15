@@ -18,10 +18,6 @@
 package org.apache.trevni;
 
 import java.io.IOException;
-import java.io.Closeable;
-import java.util.Map;
-import java.util.Map;
-import java.util.LinkedHashMap;
 
 /** */
 public class ColumnMetaData extends MetaData {

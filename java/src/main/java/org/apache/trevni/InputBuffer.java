@@ -19,7 +19,6 @@ package org.apache.trevni;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Closeable;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;

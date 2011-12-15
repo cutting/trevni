@@ -20,7 +20,7 @@ package org.apache.trevni;
 import java.io.IOException;
 import java.io.Closeable;
 
-/** An byte source that supports seek and tell. */
+/** A byte source that supports seek, tell and length. */
 public interface SeekableInput extends Closeable {
 
   /** Set the position for the next {@link #read(byte[],int,int) read()}. */

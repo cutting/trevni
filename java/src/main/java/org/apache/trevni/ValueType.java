@@ -17,12 +17,6 @@
  */
 package org.apache.trevni;
 
-import java.io.IOException;
-import java.io.Closeable;
-import java.util.Map;
-import java.util.Map;
-import java.util.LinkedHashMap;
-
 /** */
 public enum ValueType {
   INT, LONG, FIXED32, FIXED64, FLOAT, DOUBLE, STRING, BYTES;

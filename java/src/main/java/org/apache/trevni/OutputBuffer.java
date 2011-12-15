@@ -17,10 +17,8 @@
  */
 package org.apache.trevni;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -70,10 +68,6 @@ class OutputBuffer extends ByteArrayOutputStream {
   private static final Charset UTF8 = Charset.forName("UTF-8");
 
   public void writeString(String string) throws IOException {
-    if (0 == string.length()) {
-      write(0);
-      return;
-    }
     byte[] bytes = string.getBytes(UTF8);
     writeInt(bytes.length);
     write(bytes, 0, bytes.length);
@@ -91,10 +85,6 @@ class OutputBuffer extends ByteArrayOutputStream {
   }
 
   public void writeBytes(byte[] bytes, int start, int len) throws IOException {
-    if (0 == len) {
-      write(0);
-      return;
-    }
     writeInt(len);
     write(bytes, start, len);
   }
@@ -120,7 +110,7 @@ class OutputBuffer extends ByteArrayOutputStream {
     ensure(8);
     int first = (int)(l & 0xFFFFFFFF);
     int second = (int)((l >>> 32) & 0xFFFFFFFF);
-    buf[count+0] = (byte)((first        ) & 0xFF);
+    buf[count  ] = (byte)((first        ) & 0xFF);
     buf[count+4] = (byte)((second       ) & 0xFF);
     buf[count+5] = (byte)((second >>>  8) & 0xFF);
     buf[count+1] = (byte)((first >>>   8) & 0xFF);

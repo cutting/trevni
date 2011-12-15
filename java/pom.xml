@@ -81,6 +81,7 @@
           <artifactId>maven-checkstyle-plugin</artifactId>
           <version>${checkstyle-plugin-version}</version>
           <configuration>
+            <consoleOutput>true</consoleOutput>
             <configLocation>checkstyle.xml</configLocation>
           </configuration>
           <executions>

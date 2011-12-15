@@ -27,8 +27,13 @@ public class SeekableFileInput extends FileInputStream
 
   public SeekableFileInput(File file) throws IOException { super(file); }
 
+  @Override
   public void seek(long p) throws IOException { getChannel().position(p); }
+
+  @Override
   public long tell() throws IOException { return getChannel().position(); }
+
+  @Override
   public long length() throws IOException { return getChannel().size(); }
 
 }
