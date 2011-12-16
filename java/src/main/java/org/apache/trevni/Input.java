@@ -21,18 +21,11 @@ import java.io.IOException;
 import java.io.Closeable;
 
 /** A byte source that supports seek, tell and length. */
-public interface SeekableInput extends Closeable, Cloneable {
-
-  /** Set the position for the next {@link #read(byte[],int,int) read()}. */
-  void seek(long p) throws IOException;
-
-  /** Return the position of the next {@link #read(byte[],int,int) read()}. */
-  long tell() throws IOException;
-
+public interface Input extends Closeable {
   /** Return the total length of the input. */
   long length() throws IOException;
 
-  /** Equivalent to {@link java.io.InputStream#read(byte[],int,int)}. */
-  int read(byte[] b, int off, int len) throws IOException;
+  /** Positioned read. */
+  int read(long position, byte[] b, int start, int len) throws IOException;
 }
 

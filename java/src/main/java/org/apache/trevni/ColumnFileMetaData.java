@@ -17,6 +17,8 @@
  */
 package org.apache.trevni;
 
+import java.io.IOException;
+
 /** */
 public class ColumnFileMetaData extends MetaData {
 
@@ -24,19 +26,19 @@ public class ColumnFileMetaData extends MetaData {
   static final String CHECKSUM_KEY = RESERVED_KEY_PREFIX + "checksum";
 
   public String getCodec(String codec) { return getString(CODEC_KEY); }
-  public FileMetaData setCodec(String codec) {
+  public ColumnFileMetaData setCodec(String codec) {
     setReserved(CODEC_KEY, codec);
     return this;
   }
    
   public String getChecksum(String checksum) { return getString(CHECKSUM_KEY); }
-  public FileMetaData setChecksum(String checksum) {
+  public ColumnFileMetaData setChecksum(String checksum) {
     setReserved(CHECKSUM_KEY, checksum);
     return this;
   }
 
-  static ColumFileMetaData read(InputBuffer in) throws IOException {
-    ColumFileMetaData result = new ColumFileMetaData();
+  static ColumnFileMetaData read(InputBuffer in) throws IOException {
+    ColumnFileMetaData result = new ColumnFileMetaData();
     MetaData.read(in, result);
     return result;
   }

@@ -26,7 +26,7 @@ import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestSeekableByteArrayInput {
+public class TestInputBytes {
 
   private static final int SIZE = 1000;
   private static final int COUNT = 100;
@@ -37,14 +37,13 @@ public class TestSeekableByteArrayInput {
     byte[] data = new byte[length];
     random.nextBytes(data);
 
-    SeekableInput in = new SeekableByteArrayInput(data);
+    Input in = new InputBytes(data);
       
     for (int i = 0; i < COUNT; i++) {
       int p = random.nextInt(length);
       int l = Math.min(random.nextInt(SIZE/10), length-p);
       byte[] buffer = new byte[l];
-      in.seek(p);
-      in.read(buffer, 0, l);
+      in.read(p, buffer, 0, l);
       Assert.assertArrayEquals(Arrays.copyOfRange(data, p, p+l), buffer);
     }
   }

@@ -28,11 +28,11 @@ import java.util.Arrays;
 class OutputBuffer extends ByteArrayOutputStream {
   static final int BLOCK_SIZE = 64 * 1024;
 
-  private long valueCount;
+  private int valueCount;
 
   public OutputBuffer() { super(BLOCK_SIZE + BLOCK_SIZE >> 2); }
 
-  public long getValueCount() { return valueCount; }
+  public int getValueCount() { return valueCount; }
 
   public boolean isFull() { return size() >= BLOCK_SIZE; }
 

@@ -19,14 +19,13 @@ package org.apache.trevni;
 
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.Closeable;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 /** */
 
-class InputBuffer implements Closeable {
-  private SeekableInput in;
+class InputBuffer {
+  private Input in;
 
   private long inLength;
   private long offset;                            // position of buffer in input
@@ -35,21 +34,18 @@ class InputBuffer implements Closeable {
   private int pos;                                // position within buffer
   private int limit;                              // end of valid buffer data
 
-  public InputBuffer(SeekableInput in) throws IOException {
+  public InputBuffer(Input in, long position) throws IOException {
     this.in = in;
     this.inLength = in.length();
+    this.offset = position;
 
-    if (in instanceof SeekableByteArrayInput) {   // use buffer directly
-      this.buf = ((SeekableByteArrayInput)in).getBuffer();
+    if (in instanceof InputBytes) {               // use buffer directly
+      this.buf = ((InputBytes)in).getBuffer();
       this.limit = (int)in.length();
     } else {                                      // create new buffer
       this.buf = new byte[8192];                  // big enough for primitives
     }
   }
-
-  public long tell() { return offset + pos; }
-
-  public long length() { return inLength; }
 
   public void seek(long position) throws IOException {
     if (position >= offset && position <= tell()) {
@@ -58,10 +54,12 @@ class InputBuffer implements Closeable {
     }
     pos = 0;
     limit = 0;
-    in.seek(position);
+    offset = position;
   }
 
-  public void close() throws IOException { in.close(); }
+  public long tell() { return offset + pos; }
+
+  public long length() { return inLength; }
 
   public int readInt() throws IOException {
     ensure(5);                               // won't throw index out of bounds
@@ -239,8 +237,7 @@ class InputBuffer implements Closeable {
       int remaining = n - buffered;
       try {
         while (remaining > 0) {                     // buffer more
-          int read = in.read(buf, limit, Math.max(remaining, buf.length));
-          if (read < 0) break;
+          int read = readInput(buf, limit, Math.max(remaining, buf.length));
           remaining -= read;
           limit += read;
         }
@@ -262,21 +259,26 @@ class InputBuffer implements Closeable {
       pos += buffered;
       if (len > buf.length) {                     // bigger than buffer
         do {
-          int read = in.read(bytes, start, len);  // read directly into result
-          if (read < 0) throw new EOFException();
+          int read = readInput(bytes, start, len); // read directly into result
           len -= read;
           start += read;
         } while (len > 0);
         return;
       }
 
-      limit = in.read(buf, 0, buf.length);        // refill buffer
-      if (limit < 0) throw new EOFException();
+      limit = readInput(buf, 0, buf.length);        // refill buffer
       pos = 0;
     }
 
     System.arraycopy(buf, pos, bytes, start, len); // copy from buffer
     pos += len;
   }
+
+  private int readInput(byte[] b, int start, int len) throws IOException {
+    int read = in.read(offset, b, start, len);
+    if (read < 0) throw new EOFException();
+    offset += read;
+    return read;
+ }
 
 }

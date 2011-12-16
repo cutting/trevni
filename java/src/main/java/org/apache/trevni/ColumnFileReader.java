@@ -24,31 +24,41 @@ import java.util.Arrays;
 
 /** */
 public class ColumnFileReader implements Closeable {
-  private InputBuffer in;
+  private Input file;
 
   private long rowCount;
   private int columnCount;
+  private ColumnFileMetaData metaData;
 
   private ColumnMetaData[] columns;
   private long[] starts;
 
   private static class Block {
-    long start;
     int valueCount;
     int uncompressedSize;
     int compressedSize;
+
+    private Block() {}                            // private ctor
+
+    public static Block read(InputBuffer in) throws IOException {
+      Block result = new Block();
+      result.valueCount = in.readFixed32();
+      result.uncompressedSize = in.readFixed32();
+      result.compressedSize = in.readFixed32();
+      return result;
+    }
   }
 
   private Block[][] blocks;
 
   public ColumnFileReader(File file) throws IOException {
-    this(new SeekableFileInput(file));
+    this(new InputFile(file));
   }
 
-  public ColumnFileReader(SeekableInput in) throws IOException {
-    this.in = new InputBuffer(in);
+  public ColumnFileReader(Input file) throws IOException {
+    this.file = file;
     readHeader();
-    blocks = new Block[][columnCount];
+    blocks = new Block[columnCount][];
   }
 
   public long rowCount() { return rowCount; }
@@ -57,16 +67,16 @@ public class ColumnFileReader implements Closeable {
   public ColumnFileMetaData getMetaData() { return metaData; }
 
   private void readHeader() throws IOException {
-    in.seek(0);
-    readMagic();
+    InputBuffer in = new InputBuffer(file, 0);
+    readMagic(in);
     this.rowCount = in.readFixed64();
     this.columnCount = in.readFixed32();
     this.metaData = ColumnFileMetaData.read(in);
-    readColumnMetaData();
-    readColumnStarts();
+    readColumnMetaData(in);
+    readColumnStarts(in);
   }
 
-  private void readMagic() throws IOException {
+  private void readMagic(InputBuffer in) throws IOException {
     byte[] magic = new byte[ColumnFileWriter.MAGIC.length];
     try {
       in.readFully(magic);
@@ -77,13 +87,13 @@ public class ColumnFileReader implements Closeable {
       throw new IOException("Not a data file.");
   }
 
-  private void readColumnMetaData() throws IOException {
+  private void readColumnMetaData(InputBuffer in) throws IOException {
     columns = new ColumnMetaData[columnCount];
     for (int i = 0; i < columnCount; i++)
       columns[i] = ColumnMetaData.read(in);
   }
 
-  private void readColumnStarts() throws IOException {
+  private void readColumnStarts(InputBuffer in) throws IOException {
     starts = new long[columnCount];
     for (int i = 0; i < columnCount; i++)
       starts[i] = in.readFixed64();
@@ -98,24 +108,24 @@ public class ColumnFileReader implements Closeable {
   
   private Block[] getColumnBlocks(int column) throws IOException {
     Block[] result = blocks[column];
-    if (result = null)
-      result = readColumBlocks(column);
+    if (result == null)
+      result = readColumnBlocks(column);
     return result;
   }
 
   private Block[] readColumnBlocks(int column) throws IOException {
-    in.seek(starts[column]);
+    InputBuffer in = new InputBuffer(file, starts[column]);
     int blockCount = in.readFixed32();
     Block[] result = new Block[blockCount];
     for (int i = 0; i < blockCount; i++)
-      result[i] = block.read(in);
+      result[i] = Block.read(in);
     return result;
   }
 
   /** Close this reader. */
   @Override
   public void close() throws IOException {
-    in.close();
+    file.close();
   }
 
 }

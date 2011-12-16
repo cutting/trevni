@@ -20,11 +20,10 @@ package org.apache.trevni;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
-/** A {@link SeekableInput} backed with data in a byte array. */
-public class SeekableByteArrayInput extends ByteArrayInputStream
-  implements SeekableInput {
+/** An {@link Input} backed with data in a byte array. */
+public class InputBytes extends ByteArrayInputStream implements Input {
 
-  public SeekableByteArrayInput(byte[] data) {
+  public InputBytes(byte[] data) {
     super(data);
   }
 
@@ -32,13 +31,11 @@ public class SeekableByteArrayInput extends ByteArrayInputStream
   public long length() throws IOException { return this.count; }
 
   @Override
-  public void seek(long p) throws IOException {
-    this.reset();
-    this.skip(p);
+  public synchronized int read(long pos, byte[] b, int start, int len)
+    throws IOException {
+    this.pos = (int)pos;
+    return read(b, start, len);
   }
-
-  @Override
-  public long tell() throws IOException { return this.pos; }
 
   byte[] getBuffer() { return buf; }
 }

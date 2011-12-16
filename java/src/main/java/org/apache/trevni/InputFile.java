@@ -21,20 +21,20 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-/** A {@link FileInputStream} that implements {@link SeekableInput}. */
-public class SeekableFileInput extends FileInputStream
-  implements SeekableInput {
+/** A {@link FileInputStream} that implements {@link Input}. */
+public class InputFile extends FileInputStream implements Input {
 
-  public SeekableFileInput(File file) throws IOException { super(file); }
-
-  @Override
-  public void seek(long p) throws IOException { getChannel().position(p); }
-
-  @Override
-  public long tell() throws IOException { return getChannel().position(); }
+  public InputFile(File file) throws IOException { super(file); }
 
   @Override
   public long length() throws IOException { return getChannel().size(); }
+
+  @Override
+  public synchronized int read(long position, byte[] b, int start, int len)
+    throws IOException {
+    getChannel().position(position);
+    return super.read(b, start, len);
+  }
 
 }
 
