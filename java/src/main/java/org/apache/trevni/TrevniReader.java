@@ -27,7 +27,10 @@ public class TrevniReader implements Closeable {
   private InputBuffer in;
 
   private long rowCount;
-  private long columnCount;
+  private int columnCount;
+
+  private ColumnMetaData[] columns;
+  private long[] starts;
 
   public TrevniReader(File file) throws IOException {
     this(new SeekableFileInput(file));
@@ -43,14 +46,10 @@ public class TrevniReader implements Closeable {
 
   private void readHeader() throws IOException {
     in.seek(0);
-
     readMagic();
-
-    this.rowCount = in.readLong();
-    this.columnCount = in.readLong();
-    
-    //readColumnDescriptors();
-
+    this.rowCount = in.readFixed64();
+    this.columnCount = in.readFixed32();
+    readColumnDescriptors();
   }
 
   private void readMagic() throws IOException {
@@ -64,6 +63,16 @@ public class TrevniReader implements Closeable {
       throw new IOException("Not a data file.");
   }
 
+  private void readColumnDescriptors() throws IOException {
+    columns = new ColumnMetaData[columnCount];
+    for (int i = 0; i < columnCount; i++)
+      columns[i] = ColumnMetaData.read(in);
+
+    starts = new long[columnCount];
+    for (int i = 0; i < columnCount; i++)
+      starts[i] = in.readFixed64();
+  }
+ 
   /** Close this reader. */
   @Override
   public void close() throws IOException {

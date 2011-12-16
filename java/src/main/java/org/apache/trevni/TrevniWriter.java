@@ -32,21 +32,24 @@ public class TrevniWriter {
 
   private ColumnMetaData[] columns;
   private List<OutputBuffer>[] blocks;
-  private long rows;
+
+  private long rowCount;
+  private int columnCount;
 
   public TrevniWriter(ColumnMetaData... columns) throws IOException {
     this.columns = columns;
-    this.blocks = new ArrayList[columns.length];
-    for (int i = 0; i < columns.length; i++) {
+    this.columnCount = columns.length;
+    this.blocks = new ArrayList[columnCount];
+    for (int i = 0; i < columnCount; i++) {
       blocks[i] = new ArrayList<OutputBuffer>();
       blocks[i].add(new OutputBuffer());
     }
   }
 
   public void writeRow(Object... row) throws IOException {
-    for (int column = 0; column < columns.length; column++)
+    for (int column = 0; column < columnCount; column++)
       getLastBlock(column).writeValue(row[column], columns[column]);
-    rows++;
+    rowCount++;
   }
 
   private OutputBuffer getLastBlock(int column) {
@@ -73,7 +76,7 @@ public class TrevniWriter {
   public void writeTo(OutputStream out) throws IOException {
     writeHeader(out);
     
-    for (int column = 0; column < columns.length; column++)
+    for (int column = 0; column < columnCount; column++)
       writeColumn(columns[column], blocks[column], out);
   }
 
@@ -82,9 +85,9 @@ public class TrevniWriter {
 
     header.write(MAGIC);                          // magic
 
-    header.writeFixed64(rows);                    // row count
+    header.writeFixed64(rowCount);                // row count
 
-    header.writeFixed64(columns.length);          // column count
+    header.writeFixed32(columnCount);             // column count
     for (ColumnMetaData column : columns)
       column.write(header);                       // column metadata
 
@@ -96,9 +99,9 @@ public class TrevniWriter {
   }
 
   private long[] computeStarts(long start) {
-    long[] result = new long[columns.length];
-    start += columns.length * 8;                  // room for starts
-    for (int column = 0; column < columns.length; column++) {
+    long[] result = new long[columnCount];
+    start += columnCount * 8;                     // room for starts
+    for (int column = 0; column < columnCount; column++) {
       result[column] = start;
       start += 8;                                 // block count
       for (OutputBuffer block : blocks[column]) {
