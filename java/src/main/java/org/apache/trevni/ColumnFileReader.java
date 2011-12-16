@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.Closeable;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Iterator;
 
 /** */
 public class ColumnFileReader implements Closeable {
@@ -32,6 +33,7 @@ public class ColumnFileReader implements Closeable {
 
   private ColumnMetaData[] columns;
   private long[] starts;
+  private long[] dataStarts;
 
   private static class Block {
     int valueCount;
@@ -99,12 +101,35 @@ public class ColumnFileReader implements Closeable {
       starts[i] = in.readFixed64();
   }
  
-  // Block getBlock(int column, long row) {
-  //   Block[] columnBlocks = blocks[column];
-  //   if (columnBlocks = null)
-  //     readColumBlocks(column)
-  // }
-  // Block getBlock(int column, byte[] key);
+  public <T> Iterator<T> getValues(final int column) throws IOException {
+    return new Iterator<T>() {
+      private ValueType type = columns[column].getType();
+      private Block[] blocks = getColumnBlocks(column);
+      private int block = 0;
+      private InputBuffer in = new InputBuffer(file, dataStarts[column]);
+
+      public boolean hasNext() {
+        return (block < blocks.length-1)
+          || (in.valueCount() < blocks[block].valueCount);
+      }
+
+      public T next() {
+        if (in.valueCount() < blocks[block].valueCount) {
+          if (block < blocks.length-1)
+            throw new TrevniRuntimeException("Read past end of column.");
+          block++;
+          readChecksum(in);
+        }
+        try {
+          return (T)in.readValue(type);
+        } catch (IOException e) {
+          throw new TrevniRuntimeException(e);
+        }
+      }
+
+      public void remove() { throw new UnsupportedOperationException(); }
+    };
+  }
   
   private Block[] getColumnBlocks(int column) throws IOException {
     Block[] result = blocks[column];
@@ -119,8 +144,11 @@ public class ColumnFileReader implements Closeable {
     Block[] result = new Block[blockCount];
     for (int i = 0; i < blockCount; i++)
       result[i] = Block.read(in);
+    dataStarts[column] = in.tell();
     return result;
   }
+
+  private void readChecksum(InputBuffer in) {}
 
   /** Close this reader. */
   @Override

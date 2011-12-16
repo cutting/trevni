@@ -34,6 +34,8 @@ class InputBuffer {
   private int pos;                                // position within buffer
   private int limit;                              // end of valid buffer data
 
+  private int valueCount;
+
   public InputBuffer(Input in, long position) throws IOException {
     this.in = in;
     this.inLength = in.length();
@@ -60,6 +62,33 @@ class InputBuffer {
   public long tell() { return offset + pos; }
 
   public long length() { return inLength; }
+
+  public int valueCount() { return valueCount; }
+
+  public Object readValue(ValueType type)
+    throws IOException {
+    valueCount++;
+    switch (type) {
+    case INT:
+      return readInt();
+    case LONG:
+      return readLong();
+    case FIXED32:
+      return readFixed32();
+    case FIXED64:
+      return readFixed64();
+    case FLOAT:
+      return readFloat();
+    case DOUBLE:
+      return readDouble();
+    case STRING:
+      return readString();
+    case BYTES:
+      return readBytes();
+    default:
+      throw new TrevniRuntimeException("Unknown value type: "+type);
+    }
+  }
 
   public int readInt() throws IOException {
     ensure(5);                               // won't throw index out of bounds

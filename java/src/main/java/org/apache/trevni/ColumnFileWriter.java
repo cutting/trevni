@@ -51,7 +51,7 @@ public class ColumnFileWriter {
 
   public void writeRow(Object... row) throws IOException {
     for (int column = 0; column < columnCount; column++)
-      getLastBlock(column).writeValue(row[column], columns[column]);
+      getLastBlock(column).writeValue(row[column], columns[column].getType());
     rowCount++;
   }
 

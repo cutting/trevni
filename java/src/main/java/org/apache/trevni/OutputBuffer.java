@@ -36,9 +36,9 @@ class OutputBuffer extends ByteArrayOutputStream {
 
   public boolean isFull() { return size() >= BLOCK_SIZE; }
 
-  public void writeValue(Object value, ColumnMetaData column)
+  public void writeValue(Object value, ValueType type)
     throws IOException {
-    switch (column.getType()) {
+    switch (type) {
     case INT:
       writeInt((Integer)value);               break;
     case LONG:
@@ -60,7 +60,7 @@ class OutputBuffer extends ByteArrayOutputStream {
         writeBytes((byte[])value);
       break;
     default:
-      throw new TrevniRuntimeException("Unknown value type: "+column.getType());
+      throw new TrevniRuntimeException("Unknown value type: "+type);
     }
     valueCount++;
   }
