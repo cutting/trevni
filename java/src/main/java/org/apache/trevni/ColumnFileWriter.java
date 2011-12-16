@@ -26,25 +26,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 /** */
-public class TrevniWriter {
+public class ColumnFileWriter {
 
-  static final byte[] MAGIC = new byte[] {'C', 'o', 'l', 0};
+  static final byte[] MAGIC = new byte[] {'T', 'r', 'v', 0};
 
+  private ColumnFileMetaData metaData = new ColumnFileMetaData();
   private ColumnMetaData[] columns;
   private List<OutputBuffer>[] blocks;
 
   private long rowCount;
   private int columnCount;
 
-  public TrevniWriter(ColumnMetaData... columns) throws IOException {
+  public ColumnFileWriter(ColumnMetaData... columns) throws IOException {
     this.columns = columns;
     this.columnCount = columns.length;
-    this.blocks = new ArrayList[columnCount];
+    this.blocks = new List[columnCount];
     for (int i = 0; i < columnCount; i++) {
       blocks[i] = new ArrayList<OutputBuffer>();
       blocks[i].add(new OutputBuffer());
     }
   }
+
+  public ColumnFileMetaData getMetaData() { return metaData; }
 
   public void writeRow(Object... row) throws IOException {
     for (int column = 0; column < columnCount; column++)
@@ -88,6 +91,9 @@ public class TrevniWriter {
     header.writeFixed64(rowCount);                // row count
 
     header.writeFixed32(columnCount);             // column count
+
+    metaData.write(header);                       // file metadata
+
     for (ColumnMetaData column : columns)
       column.write(header);                       // column metadata
 
@@ -119,7 +125,7 @@ public class TrevniWriter {
 
     OutputBuffer header = new OutputBuffer();
 
-    header.writeFixed64(blocks.size());
+    header.writeFixed32(blocks.size());
     for (OutputBuffer block : blocks)
       writeBlockDescriptor(column, block, header);
     header.writeTo(out);
@@ -134,9 +140,9 @@ public class TrevniWriter {
                                     OutputBuffer header)
     throws IOException {
 
-    header.writeFixed64(block.getValueCount()); // value count
-    header.writeFixed64(block.size());          // uncompressed size
-    header.writeFixed64(block.size());          // compressed size
+    header.writeFixed32(block.getValueCount()); // value count
+    header.writeFixed32(block.size());          // uncompressed size
+    header.writeFixed32(block.size());          // compressed size
   }
 }
 

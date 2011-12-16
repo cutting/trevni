@@ -18,7 +18,7 @@
 package org.apache.trevni;
 
 /** */
-public class FileMetaData extends MetaData {
+public class ColumnFileMetaData extends MetaData {
 
   static final String CODEC_KEY = RESERVED_KEY_PREFIX + "codec";
   static final String CHECKSUM_KEY = RESERVED_KEY_PREFIX + "checksum";
@@ -33,6 +33,12 @@ public class FileMetaData extends MetaData {
   public FileMetaData setChecksum(String checksum) {
     setReserved(CHECKSUM_KEY, checksum);
     return this;
+  }
+
+  static ColumFileMetaData read(InputBuffer in) throws IOException {
+    ColumFileMetaData result = new ColumFileMetaData();
+    MetaData.read(in, result);
+    return result;
   }
 
 }

@@ -23,7 +23,7 @@ import java.io.File;
 import java.util.Arrays;
 
 /** */
-public class TrevniReader implements Closeable {
+public class ColumnFileReader implements Closeable {
   private InputBuffer in;
 
   private long rowCount;
@@ -32,47 +32,86 @@ public class TrevniReader implements Closeable {
   private ColumnMetaData[] columns;
   private long[] starts;
 
-  public TrevniReader(File file) throws IOException {
+  private static class Block {
+    long start;
+    int valueCount;
+    int uncompressedSize;
+    int compressedSize;
+  }
+
+  private Block[][] blocks;
+
+  public ColumnFileReader(File file) throws IOException {
     this(new SeekableFileInput(file));
   }
 
-  public TrevniReader(SeekableInput in) throws IOException {
+  public ColumnFileReader(SeekableInput in) throws IOException {
     this.in = new InputBuffer(in);
     readHeader();
+    blocks = new Block[][columnCount];
   }
 
   public long rowCount() { return rowCount; }
   public long columnCount() { return columnCount; }
+
+  public ColumnFileMetaData getMetaData() { return metaData; }
 
   private void readHeader() throws IOException {
     in.seek(0);
     readMagic();
     this.rowCount = in.readFixed64();
     this.columnCount = in.readFixed32();
-    readColumnDescriptors();
+    this.metaData = ColumnFileMetaData.read(in);
+    readColumnMetaData();
+    readColumnStarts();
   }
 
   private void readMagic() throws IOException {
-    byte[] magic = new byte[TrevniWriter.MAGIC.length];
+    byte[] magic = new byte[ColumnFileWriter.MAGIC.length];
     try {
       in.readFully(magic);
     } catch (IOException e) {
       throw new IOException("Not a data file.");
     }
-    if (!Arrays.equals(TrevniWriter.MAGIC, magic))
+    if (!Arrays.equals(ColumnFileWriter.MAGIC, magic))
       throw new IOException("Not a data file.");
   }
 
-  private void readColumnDescriptors() throws IOException {
+  private void readColumnMetaData() throws IOException {
     columns = new ColumnMetaData[columnCount];
     for (int i = 0; i < columnCount; i++)
       columns[i] = ColumnMetaData.read(in);
+  }
 
+  private void readColumnStarts() throws IOException {
     starts = new long[columnCount];
     for (int i = 0; i < columnCount; i++)
       starts[i] = in.readFixed64();
   }
  
+  // Block getBlock(int column, long row) {
+  //   Block[] columnBlocks = blocks[column];
+  //   if (columnBlocks = null)
+  //     readColumBlocks(column)
+  // }
+  // Block getBlock(int column, byte[] key);
+  
+  private Block[] getColumnBlocks(int column) throws IOException {
+    Block[] result = blocks[column];
+    if (result = null)
+      result = readColumBlocks(column);
+    return result;
+  }
+
+  private Block[] readColumnBlocks(int column) throws IOException {
+    in.seek(starts[column]);
+    int blockCount = in.readFixed32();
+    Block[] result = new Block[blockCount];
+    for (int i = 0; i < blockCount; i++)
+      result[i] = block.read(in);
+    return result;
+  }
+
   /** Close this reader. */
   @Override
   public void close() throws IOException {
