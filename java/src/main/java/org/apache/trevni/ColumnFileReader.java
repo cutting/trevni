@@ -63,8 +63,8 @@ public class ColumnFileReader implements Closeable {
     blocks = new Block[columnCount][];
   }
 
-  public long rowCount() { return rowCount; }
-  public long columnCount() { return columnCount; }
+  public long getRowCount() { return rowCount; }
+  public long getColumnCount() { return columnCount; }
 
   public ColumnFileMetaData getMetaData() { return metaData; }
 

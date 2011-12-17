@@ -36,6 +36,8 @@ class InputBuffer {
 
   private int valueCount;
 
+  public InputBuffer(Input in) throws IOException { this(in, 0); }
+
   public InputBuffer(Input in, long position) throws IOException {
     this.in = in;
     this.inLength = in.length();
@@ -265,7 +267,7 @@ class InputBuffer {
       limit = buffered;
       int remaining = n - buffered;
       try {
-        while (remaining > 0) {                     // buffer more
+        while (remaining > 0 && limit < buf.length) { // buffer more
           int read = readInput(buf, limit, Math.max(remaining, buf.length));
           remaining -= read;
           limit += read;
