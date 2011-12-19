@@ -94,7 +94,15 @@ class InputBuffer {
   }
 
   public int readInt() throws IOException {
-    ensure(5);                               // won't throw index out of bounds
+    if ((limit - pos) < 5) {                      // maybe not in buffer
+      int b = read();
+      int n = b & 0x7F;
+      for (int shift = 7; (b & 0x80) != 0; shift += 7) {
+        b = read();
+        n |= (b & 0x7F) << shift;
+      }
+      return (n >>> 1) ^ -(n & 1);                  // back to two's-complement
+    }
     int len = 1;
     int b = buf[pos] & 0xff;
     int n = b & 0x7f;
@@ -124,7 +132,16 @@ class InputBuffer {
   }
 
   public long readLong() throws IOException {
-    ensure(10);
+    if ((limit - pos) < 10) {                      // maybe not in buffer
+      int b = read();
+      long n = b & 0x7F;
+      for (int shift = 7; (b & 0x80) != 0; shift += 7) {
+        b = read();
+        n |= (b & 0x7F) << shift;
+      }
+      return (n >>> 1) ^ -(n & 1);                  // back to two's-complement
+    }
+
     int b = buf[pos++] & 0xff;
     int n = b & 0x7f;
     long l;
@@ -197,7 +214,9 @@ class InputBuffer {
   }
 
   public int readFixed32() throws IOException {
-    ensure(4);
+    if ((limit - pos) < 4)                        // maybe not in buffer
+      return read() | (read() << 8) | (read() << 16) | (read() << 24);
+
     int len = 1;
     int n = (buf[pos] & 0xff) | ((buf[pos + len++] & 0xff) << 8)
         | ((buf[pos + len++] & 0xff) << 16) | ((buf[pos + len++] & 0xff) << 24);
@@ -212,16 +231,7 @@ class InputBuffer {
   }
 
   public long readFixed64() throws IOException {
-    ensure(8);
-    int len = 1;
-    int n1 = (buf[pos] & 0xff) | ((buf[pos + len++] & 0xff) << 8)
-        | ((buf[pos + len++] & 0xff) << 16) | ((buf[pos + len++] & 0xff) << 24);
-    int n2 = (buf[pos + len++] & 0xff) | ((buf[pos + len++] & 0xff) << 8)
-        | ((buf[pos + len++] & 0xff) << 16) | ((buf[pos + len++] & 0xff) << 24);
-    if ((pos + 8) > limit)
-      throw new EOFException();
-    pos += 8;
-    return (((long) n1) & 0xffffffffL) | (((long) n2) << 32);
+    return (readFixed32() & 0xFFFFFFFFL) | (((long)readFixed32()) << 32);
   }
 
   private static final Charset UTF8 = Charset.forName("UTF-8");
@@ -266,19 +276,12 @@ class InputBuffer {
     seek(tell()+length);
   }
 
-  private void ensure(int n) throws IOException {
-    int buffered = limit - pos;
-    if (buffered < n) {                             // not enough in buffer
-      System.arraycopy(buf, pos, buf, 0, buffered); // move buffered to front
+  public int read() throws IOException {
+    if (pos >= limit) {
+      limit = readInput(buf, 0, buf.length);
       pos = 0;
-      limit = buffered;
-      int remaining = n - buffered;
-      while (remaining > 0 && offset < inLength) { // buffer more
-        int read = readInput(buf, limit, Math.max(remaining, buf.length));
-        remaining -= read;
-        limit += read;
-      }
     }
+    return buf[pos++];
   }
 
   public void readFully(byte[] bytes) throws IOException {

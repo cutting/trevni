@@ -32,6 +32,7 @@ public class InputFile extends FileInputStream implements Input {
   @Override
   public synchronized int read(long position, byte[] b, int start, int len)
     throws IOException {
+    System.out.println("position = "+position+" start="+start+" len="+len+" b.len="+b.length);
     getChannel().position(position);
     return super.read(b, start, len);
   }

@@ -31,8 +31,7 @@ import org.junit.Test;
 public class TestColumnFile {
 
   private static final File FILE = new File("target", "test.trv");
-  private static final int SIZE = 1000;
-  private static final int COUNT = 100;
+  private static final int COUNT = 1024*1024;
 
   @Test public void testEmpty() throws Exception {
     FILE.delete();
