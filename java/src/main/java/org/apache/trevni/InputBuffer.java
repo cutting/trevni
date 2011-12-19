@@ -224,12 +224,18 @@ class InputBuffer {
     return (((long) n1) & 0xffffffffL) | (((long) n2) << 32);
   }
 
-  private ByteBuffer scratch = ByteBuffer.allocate(16);
   private static final Charset UTF8 = Charset.forName("UTF-8");
 
   public String readString() throws IOException {
-    scratch = readBytes(scratch);
-    return new String(scratch.array(), 0, scratch.limit(), UTF8);
+    int length = readInt();
+    if (length <= (limit - pos)) {                        // in buffer
+      String result = new String(buf, pos, length, UTF8); // read directly
+      pos += length;
+      return result;
+    }
+    byte[] bytes = new byte[length];
+    readFully(bytes, 0, length);
+    return new String(bytes, 0, length, UTF8);
   }  
 
   public byte[] readBytes() throws IOException {
