@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Arrays;
+import java.util.Iterator;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -43,17 +44,25 @@ public class TestColumnFile {
     in.close();
   }
 
-  @Test public void testInt() throws Exception {
+  @Test public void testInts() throws Exception {
     FILE.delete();
 
     ColumnFileWriter out =
       new ColumnFileWriter(new ColumnMetaData("test", ValueType.INT));
-    Random random = new Random();
-    out.writeRow(random.nextInt(SIZE));
+    Random random = TestUtil.createRandom();
+    for (int i = 0; i < COUNT; i++)
+      out.writeRow(TestUtil.randomLength(random));
     out.writeTo(FILE);
 
+    random = TestUtil.createRandom();
     ColumnFileReader in = new ColumnFileReader(FILE);
-    Assert.assertEquals(1, in.getRowCount());
     Assert.assertEquals(1, in.getColumnCount());
+    Iterator<Integer> i = in.getValues(0);
+    int count = 0;
+    while (i.hasNext()) {
+      Assert.assertEquals(TestUtil.randomLength(random), (int)i.next());
+      count++;
+    }
+    Assert.assertEquals(COUNT, count);
   }
 }
