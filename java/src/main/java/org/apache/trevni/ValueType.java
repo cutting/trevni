@@ -23,4 +23,7 @@ public enum ValueType {
   private String name;
   private ValueType() { this.name = this.name().toLowerCase(); }
   public String getName() { return name; }
+  public static ValueType forName(String name) {
+    return valueOf(name.toUpperCase());
+  }
 }

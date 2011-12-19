@@ -28,7 +28,7 @@ class InputBuffer {
   private Input in;
 
   private long inLength;
-  private long offset;                            // position of buffer in input
+  private long offset;                            // pos of next read from in
 
   private byte[] buf;                             // data from input
   private int pos;                                // position within buffer
@@ -46,14 +46,15 @@ class InputBuffer {
     if (in instanceof InputBytes) {               // use buffer directly
       this.buf = ((InputBytes)in).getBuffer();
       this.limit = (int)in.length();
+      this.offset = limit;
     } else {                                      // create new buffer
       this.buf = new byte[8192];                  // big enough for primitives
     }
   }
 
   public void seek(long position) throws IOException {
-    if (position >= offset && position <= tell()) {
-      pos = (int)(position - offset);             // seek in buffer;
+    if (position >= (offset-limit) && position <= offset) {
+      pos = (int)(limit - (offset - position));   // seek in buffer;
       return;
     }
     pos = 0;
@@ -61,7 +62,7 @@ class InputBuffer {
     offset = position;
   }
 
-  public long tell() { return offset + pos; }
+  public long tell() { return (offset-limit)+pos; }
 
   public long length() { return inLength; }
 
@@ -266,13 +267,11 @@ class InputBuffer {
       pos = 0;
       limit = buffered;
       int remaining = n - buffered;
-      try {
-        while (remaining > 0 && limit < buf.length) { // buffer more
-          int read = readInput(buf, limit, Math.max(remaining, buf.length));
-          remaining -= read;
-          limit += read;
-        }
-      } catch (EOFException eof) {}        
+      while (remaining > 0 && offset < inLength) { // buffer more
+        int read = readInput(buf, limit, Math.max(remaining, buf.length));
+        remaining -= read;
+        limit += read;
+      }
     }
   }
 

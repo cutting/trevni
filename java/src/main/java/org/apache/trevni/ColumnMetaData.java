@@ -56,7 +56,7 @@ public class ColumnMetaData extends MetaData {
     ColumnMetaData result = new ColumnMetaData();
     MetaData.read(in, result);
     result.name = result.getString(NAME_KEY);
-    result.type = ValueType.valueOf(result.getString(TYPE_KEY));
+    result.type = ValueType.forName(result.getString(TYPE_KEY));
     result.values = result.get(VALUES_KEY) != null;
     return result;
   }

@@ -26,7 +26,6 @@ import org.junit.Test;
 
 public class TestIOBuffers {
 
-  private static final int SEED = 71;
   private static final int COUNT = 1000;
 
   @Test public void testEmpty() throws Exception {
@@ -38,7 +37,7 @@ public class TestIOBuffers {
   }
 
   @Test public void testZero() throws Exception {
-    Random random = new Random(SEED);
+    Random random = TestUtil.createRandom();
     OutputBuffer out = new OutputBuffer();
     out.writeInt(0);
     byte[] bytes = out.toByteArray();
@@ -49,51 +48,75 @@ public class TestIOBuffers {
   }
 
   @Test public void testInt() throws Exception {
-    Random random = new Random(SEED);
+    Random random = TestUtil.createRandom();
     OutputBuffer out = new OutputBuffer();
     for (int i = 0; i < COUNT; i++)
       out.writeInt(random.nextInt());
     
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
-    random = new Random(SEED);
+    random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
       Assert.assertEquals(random.nextInt(), in.readInt());
   }
 
   @Test public void testLong() throws Exception {
-    Random random = new Random(SEED);
+    Random random = TestUtil.createRandom();
     OutputBuffer out = new OutputBuffer();
     for (int i = 0; i < COUNT; i++)
       out.writeLong(random.nextLong());
     
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
-    random = new Random(SEED);
+    random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
       Assert.assertEquals(random.nextLong(), in.readLong());
   }
 
   @Test public void testFixed32() throws Exception {
-    Random random = new Random(SEED);
+    Random random = TestUtil.createRandom();
     OutputBuffer out = new OutputBuffer();
     for (int i = 0; i < COUNT; i++)
       out.writeFixed32(random.nextInt());
     
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
-    random = new Random(SEED);
+    random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
       Assert.assertEquals(random.nextInt(), in.readFixed32());
   }
 
   @Test public void testFixed64() throws Exception {
-    Random random = new Random(SEED);
+    Random random = TestUtil.createRandom();
     OutputBuffer out = new OutputBuffer();
     for (int i = 0; i < COUNT; i++)
       out.writeFixed64(random.nextLong());
     
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
-    random = new Random(SEED);
+    random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
       Assert.assertEquals(random.nextLong(), in.readFixed64());
+  }
+
+  @Test public void testBytes() throws Exception {
+    Random random = TestUtil.createRandom();
+    OutputBuffer out = new OutputBuffer();
+    for (int i = 0; i < COUNT; i++)
+      out.writeBytes(TestUtil.randomBytes(random));
+    
+    InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
+    random = TestUtil.createRandom();
+    for (int i = 0; i < COUNT; i++)
+      Assert.assertArrayEquals(TestUtil.randomBytes(random), in.readBytes());
+  }
+
+  @Test public void testString() throws Exception {
+    Random random = TestUtil.createRandom();
+    OutputBuffer out = new OutputBuffer();
+    for (int i = 0; i < COUNT; i++)
+      out.writeString(TestUtil.randomString(random));
+    
+    InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
+    random = TestUtil.createRandom();
+    for (int i = 0; i < COUNT; i++)
+      Assert.assertEquals(TestUtil.randomString(random), in.readString());
   }
 
 }
