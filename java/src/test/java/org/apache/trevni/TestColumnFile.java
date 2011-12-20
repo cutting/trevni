@@ -31,7 +31,7 @@ import org.junit.Test;
 public class TestColumnFile {
 
   private static final File FILE = new File("target", "test.trv");
-  private static final int COUNT = 1024*1024;
+  private static final int COUNT = 1024*128;
 
   @Test public void testEmpty() throws Exception {
     FILE.delete();
@@ -55,6 +55,7 @@ public class TestColumnFile {
 
     random = TestUtil.createRandom();
     ColumnFileReader in = new ColumnFileReader(FILE);
+    Assert.assertEquals(COUNT, in.getRowCount());
     Assert.assertEquals(1, in.getColumnCount());
     Iterator<Integer> i = in.getValues(0);
     int count = 0;
@@ -64,4 +65,76 @@ public class TestColumnFile {
     }
     Assert.assertEquals(COUNT, count);
   }
+
+  @Test public void testLongs() throws Exception {
+    FILE.delete();
+
+    ColumnFileWriter out =
+      new ColumnFileWriter(new ColumnMetaData("test", ValueType.LONG));
+    Random random = TestUtil.createRandom();
+    for (int i = 0; i < COUNT; i++)
+      out.writeRow(random.nextLong());
+    out.writeTo(FILE);
+
+    random = TestUtil.createRandom();
+    ColumnFileReader in = new ColumnFileReader(FILE);
+    Assert.assertEquals(COUNT, in.getRowCount());
+    Assert.assertEquals(1, in.getColumnCount());
+    Iterator<Long> i = in.getValues(0);
+    int count = 0;
+    while (i.hasNext()) {
+      Assert.assertEquals(random.nextLong(), (long)i.next());
+      count++;
+    }
+    Assert.assertEquals(COUNT, count);
+  }
+
+  @Test public void testStrings() throws Exception {
+    FILE.delete();
+
+    ColumnFileWriter out =
+      new ColumnFileWriter(new ColumnMetaData("test", ValueType.STRING));
+    Random random = TestUtil.createRandom();
+    for (int i = 0; i < COUNT; i++)
+      out.writeRow(TestUtil.randomString(random));
+    out.writeTo(FILE);
+
+    random = TestUtil.createRandom();
+    ColumnFileReader in = new ColumnFileReader(FILE);
+    Assert.assertEquals(COUNT, in.getRowCount());
+    Assert.assertEquals(1, in.getColumnCount());
+    Iterator<String> i = in.getValues(0);
+    int count = 0;
+    while (i.hasNext()) {
+      Assert.assertEquals(TestUtil.randomString(random), i.next());
+      count++;
+    }
+    Assert.assertEquals(COUNT, count);
+  }
+
+  @Test public void testTwoColumn() throws Exception {
+    FILE.delete();
+    ColumnFileWriter out =
+      new ColumnFileWriter(new ColumnMetaData("a", ValueType.FIXED32),
+                           new ColumnMetaData("b", ValueType.STRING));
+    Random random = TestUtil.createRandom();
+    for (int i = 0; i < COUNT; i++)
+      out.writeRow(random.nextInt(), TestUtil.randomString(random));
+    out.writeTo(FILE);
+
+    random = TestUtil.createRandom();
+    ColumnFileReader in = new ColumnFileReader(FILE);
+    Assert.assertEquals(COUNT, in.getRowCount());
+    Assert.assertEquals(2, in.getColumnCount());
+    Iterator<String> i = in.getValues(0);
+    Iterator<String> j = in.getValues(1);
+    int count = 0;
+    while (i.hasNext() && j.hasNext()) {
+      Assert.assertEquals(random.nextInt(), i.next());
+      Assert.assertEquals(TestUtil.randomString(random), j.next());
+      count++;
+    }
+    Assert.assertEquals(COUNT, count);
+  }
+
 }

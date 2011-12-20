@@ -109,9 +109,9 @@ public class ColumnFileWriter {
     start += columnCount * 8;                     // room for starts
     for (int column = 0; column < columnCount; column++) {
       result[column] = start;
-      start += 8;                                 // block count
+      start += 4;                                 // block count
       for (OutputBuffer block : blocks[column]) {
-        start += 8 * 3;                           // count & sizes
+        start += 4 * 3;                           // count & sizes
         start += block.size();
       }
     }
