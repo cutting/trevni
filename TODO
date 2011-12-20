@@ -1,0 +1,8 @@
+- split reader's iterator into separate class
+- implement iterators per type to avoid boxing & dispatch
+- change writer api to addRowValue(int column, T) to avoid allocations
+- implement compression
+- implement checksum
+- implement random access by row
+- implement index values
+- implement random access by value
