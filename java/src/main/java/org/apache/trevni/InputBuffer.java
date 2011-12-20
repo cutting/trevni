@@ -67,6 +67,7 @@ class InputBuffer {
   public long length() { return inLength; }
 
   public int valueCount() { return valueCount; }
+  public void valueCount(int valueCount) { this.valueCount = valueCount; }
 
   public Object readValue(ValueType type)
     throws IOException {
@@ -96,10 +97,10 @@ class InputBuffer {
   public int readInt() throws IOException {
     if ((limit - pos) < 5) {                      // maybe not in buffer
       int b = read();
-      int n = b & 0x7F;
-      for (int shift = 7; (b & 0x80) != 0; shift += 7) {
+      int n = b & 0x7f;
+      for (int shift = 7; b > 0x7f; shift += 7) {
         b = read();
-        n |= (b & 0x7F) << shift;
+        n ^= (b & 0x7f) << shift;
       }
       return (n >>> 1) ^ -(n & 1);                  // back to two's-complement
     }
@@ -132,14 +133,14 @@ class InputBuffer {
   }
 
   public long readLong() throws IOException {
-    if ((limit - pos) < 10) {                      // maybe not in buffer
+    if ((limit - pos) < 10) {                     // maybe not in buffer
       int b = read();
-      long n = b & 0x7F;
-      for (int shift = 7; (b & 0x80) != 0; shift += 7) {
+      long n = b & 0x7f;
+      for (int shift = 7; b > 0x7f; shift += 7) {
         b = read();
-        n |= (b & 0x7F) << shift;
+        n ^= (b & 0x7fL) << shift;
       }
-      return (n >>> 1) ^ -(n & 1);                  // back to two's-complement
+      return (n >>> 1) ^ -(n & 1);                // back to two's-complement
     }
 
     int b = buf[pos++] & 0xff;
@@ -281,7 +282,7 @@ class InputBuffer {
       limit = readInput(buf, 0, buf.length);
       pos = 0;
     }
-    return buf[pos++];
+    return buf[pos++] & 0xFF;
   }
 
   public void readFully(byte[] bytes) throws IOException {

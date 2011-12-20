@@ -40,7 +40,7 @@ public class TestUtil {
         seed = Long.valueOf(configured);
       else 
         seed = System.currentTimeMillis();
-      System.out.println("Random seed = "+seed);
+      System.out.println("test.seed="+seed);
       seedSet = true;
     }
     return seed;

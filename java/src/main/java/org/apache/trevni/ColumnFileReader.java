@@ -110,16 +110,17 @@ public class ColumnFileReader implements Closeable {
       private InputBuffer in = new InputBuffer(file, dataStarts[column]);
 
       public boolean hasNext() {
-        return (block < blocks.length)
-          && (in.valueCount() < blocks[block].valueCount);
+        return block != blocks.length-1
+          || in.valueCount() != blocks[block].valueCount;
       }
 
       public T next() {
         if (in.valueCount() >= blocks[block].valueCount) {
           if (block >= blocks.length)
             throw new TrevniRuntimeException("Read past end of column.");
-          block++;
           readChecksum(in);
+          block++;
+          in.valueCount(0);
         }
         try {
           return (T)in.readValue(type);
