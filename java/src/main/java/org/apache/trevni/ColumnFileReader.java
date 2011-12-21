@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
 
-/** Read data from a column file. */
+/** Reads data from a column file. */
 public class ColumnFileReader implements Closeable {
   private Input file;
 
