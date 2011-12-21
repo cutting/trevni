@@ -1,19 +1,18 @@
-Improvements/Optimizations:
-- implement iterator subclasses per type to avoid boxing & dispatch?
-- change writer api to addRowValue(int column, T) to avoid allocations?
-- add benchmarks
-
-Features:
-- implement random access by row
-- implement random access by value
-
 Complete implementation of specification:
 - implement compression
 - implement checksum
 - implement index values
 
+Features:
+- implement random access by row
+- implement random access by value
+
+Improvements/Optimizations:
+- implement iterator subclasses per type to avoid boxing & dispatch?
+- change writer api to addRowValue(int column, T) to avoid allocations?
+- add benchmarks
+
 Documentation:
-- add javadoc to all public apis
 - convert specification document to live w/ source
 
 Integration with other tools:

@@ -25,7 +25,9 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-/** */
+/** Writes data to a column file.
+ * All data is buffered until {@link #writeTo(File)} is called.
+ */
 public class ColumnFileWriter {
 
   static final byte[] MAGIC = new byte[] {'T', 'r', 'v', 0};
@@ -37,6 +39,7 @@ public class ColumnFileWriter {
   private long rowCount;
   private int columnCount;
 
+  /** Construct given metadata for each column in the file. */
   public ColumnFileWriter(ColumnMetaData... columns) throws IOException {
     this.columns = columns;
     this.columnCount = columns.length;
@@ -47,8 +50,10 @@ public class ColumnFileWriter {
     }
   }
 
+  /** Return the file's metadata. */
   public ColumnFileMetaData getMetaData() { return metaData; }
 
+  /** Add a row to the file. */
   public void writeRow(Object... row) throws IOException {
     for (int column = 0; column < columnCount; column++)
       getLastBlock(column).writeValue(row[column], columns[column].getType());
@@ -65,7 +70,7 @@ public class ColumnFileWriter {
     return last;
   }
 
-  /** Write a column file. */
+  /** Write all rows added to the named file. */
   public void writeTo(File file) throws IOException {
     OutputStream out = new FileOutputStream(file);
     try {
@@ -75,7 +80,7 @@ public class ColumnFileWriter {
     }
   }
 
-  /** Write a column file. */
+  /** Write all rows added to the named output stream. */
   public void writeTo(OutputStream out) throws IOException {
     writeHeader(out);
     

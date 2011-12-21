@@ -24,6 +24,7 @@ import java.io.IOException;
 /** A {@link FileInputStream} that implements {@link Input}. */
 public class InputFile extends FileInputStream implements Input {
 
+  /** Construct for the given file. */
   public InputFile(File file) throws IOException { super(file); }
 
   @Override

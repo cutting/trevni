@@ -19,7 +19,7 @@ package org.apache.trevni;
 
 import java.io.IOException;
 
-/** */
+/** Meta data for a column. */
 public class ColumnMetaData extends MetaData {
 
   static final String NAME_KEY = RESERVED_KEY_PREFIX + "name";
@@ -32,6 +32,8 @@ public class ColumnMetaData extends MetaData {
   private boolean values;
 
   private ColumnMetaData() {}                     // non-public ctor
+
+  /** Construct given a name and type. */
   public ColumnMetaData(String name, ValueType type) {
     this.name = name;
     setReserved(NAME_KEY, name);
@@ -39,9 +41,16 @@ public class ColumnMetaData extends MetaData {
     setReserved(TYPE_KEY, type.getName());
   }
 
+  /** Return this column's name. */
   public String getName() { return name; }
+
+  /** Return this column's type. */
   public ValueType getType() { return type; }
 
+  /** Set whether this column has an index of blocks by value.
+   * This only makes sense for sorted columns and permits one to seek into a
+   * column by value.
+   */
   public ColumnMetaData setValues(boolean values) {
     this.values = values;
     if (values)
@@ -50,6 +59,8 @@ public class ColumnMetaData extends MetaData {
       remove(VALUES_KEY);
     return this;
   }
+
+  /** Get whether this column has an index of blocks by value. */
   public boolean getValues(String values) { return get(VALUES_KEY) != null; }
 
   static ColumnMetaData read(InputBuffer in) throws IOException {

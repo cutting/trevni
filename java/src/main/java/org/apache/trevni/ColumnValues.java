@@ -20,7 +20,7 @@ package org.apache.trevni;
 import java.io.IOException;
 import java.util.Iterator;
 
-/** */
+/** An iterator over column values. */
 public class ColumnValues<T> implements Iterator<T>, Iterable<T> {
   private final ColumnDescriptor column;
   private final ValueType type;
@@ -29,21 +29,21 @@ public class ColumnValues<T> implements Iterator<T>, Iterable<T> {
 
   private int block = 0;
 
-  public ColumnValues(ColumnDescriptor column) throws IOException {
+  ColumnValues(ColumnDescriptor column) throws IOException {
     this.column = column;
     this.type = column.metaData.getType();
     this.blocks = column.getBlocks();
     this.in = new InputBuffer(column.file, column.dataStart);
   }
 
-  public Iterator iterator() { return this; }
+  @Override public Iterator iterator() { return this; }
 
-  public boolean hasNext() {
+  @Override public boolean hasNext() {
     return block != blocks.length-1
       || in.valueCount() != blocks[block].valueCount;
   }
 
-  public T next() {
+  @Override public T next() {
     if (in.valueCount() >= blocks[block].valueCount) {
       if (block >= blocks.length)
         throw new TrevniRuntimeException("Read past end of column.");
@@ -58,7 +58,7 @@ public class ColumnValues<T> implements Iterator<T>, Iterable<T> {
     }
   }
 
-  public void remove() { throw new UnsupportedOperationException(); }
+  @Override public void remove() { throw new UnsupportedOperationException(); }
 
   private void readChecksum() {}
 

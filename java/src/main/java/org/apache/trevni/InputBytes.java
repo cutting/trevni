@@ -23,6 +23,7 @@ import java.io.IOException;
 /** An {@link Input} backed with data in a byte array. */
 public class InputBytes extends ByteArrayInputStream implements Input {
 
+  /** Construct for the given bytes. */
   public InputBytes(byte[] data) {
     super(data);
   }

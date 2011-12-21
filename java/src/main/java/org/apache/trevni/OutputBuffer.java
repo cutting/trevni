@@ -23,8 +23,7 @@ import java.nio.charset.Charset;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-/** */
-
+/** Used to write values. */
 class OutputBuffer extends ByteArrayOutputStream {
   static final int BLOCK_SIZE = 64 * 1024;
 

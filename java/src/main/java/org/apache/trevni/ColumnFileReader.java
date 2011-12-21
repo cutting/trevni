@@ -24,7 +24,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.HashMap;
 
-/** */
+/** Read data from a column file. */
 public class ColumnFileReader implements Closeable {
   private Input file;
 
@@ -34,19 +34,45 @@ public class ColumnFileReader implements Closeable {
   private ColumnDescriptor[] columns;
   private Map<String,ColumnDescriptor> columnsByName;
 
+  /** Construct reading from the named file. */
   public ColumnFileReader(File file) throws IOException {
     this(new InputFile(file));
   }
 
+  /** Construct reading from the provided input. */
   public ColumnFileReader(Input file) throws IOException {
     this.file = file;
     readHeader();
   }
 
+  /** Return the number of rows in this file. */
   public long getRowCount() { return rowCount; }
+
+  /** Return the number of columns in this file. */
   public long getColumnCount() { return columnCount; }
 
+  /** Return this file's metadata. */
   public ColumnFileMetaData getMetaData() { return metaData; }
+
+  /** Return all columns' metadata. */
+  public ColumnMetaData[] getColumnMetaData() {
+    ColumnMetaData[] result = new ColumnMetaData[columnCount];
+    for (int i = 0; i < columnCount; i++)
+      result[i] = columns[i].metaData;
+    return result;
+  }
+
+  /** Return a column's metadata. */
+  public ColumnMetaData getColumnMetaData(String name) {
+    return getColumn(name).metaData;
+  }
+
+  private ColumnDescriptor getColumn(String name) {
+    ColumnDescriptor column = columnsByName.get(name);
+    if (column == null)
+      throw new TrevniRuntimeException("No column named: "+name);
+    return column;
+  }
 
   private void readHeader() throws IOException {
     InputBuffer in = new InputBuffer(file, 0);
@@ -85,24 +111,17 @@ public class ColumnFileReader implements Closeable {
       columns[i].start = in.readFixed64();
   }
  
+  /** Return an iterator over values in the named column. */
   public <T> ColumnValues<T> getValues(String columnName) throws IOException {
     return new ColumnValues<T>(getColumn(columnName));
   }
 
+  /** Return an iterator over values in a column. */
   public <T> ColumnValues<T> getValues(int column) throws IOException {
     return new ColumnValues<T>(columns[column]);
   }
 
-  private ColumnDescriptor getColumn(String name) {
-    ColumnDescriptor column = columnsByName.get(name);
-    if (column == null)
-      throw new TrevniRuntimeException("No column named: "+name);
-    return column;
-  }
-
-  /** Close this reader. */
-  @Override
-  public void close() throws IOException {
+  @Override public void close() throws IOException {
     file.close();
   }
 

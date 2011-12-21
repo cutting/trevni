@@ -22,8 +22,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
-/** */
-
+/** Used to read values. */
 class InputBuffer {
   private Input in;
 

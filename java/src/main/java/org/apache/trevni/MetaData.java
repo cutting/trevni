@@ -22,7 +22,7 @@ import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.LinkedHashMap;
 
-/** */
+/** Base class for metadata. */
 public class MetaData extends LinkedHashMap<String,byte[]> {
 
   static final String RESERVED_KEY_PREFIX = "trevni.";
