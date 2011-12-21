@@ -19,7 +19,7 @@ package org.apache.trevni;
 
 import java.io.IOException;
 
-/** Meta data for a column. */
+/** Metadata for a column. */
 public class ColumnMetaData extends MetaData {
 
   static final String NAME_KEY = RESERVED_KEY_PREFIX + "name";
