@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.io.Closeable;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.HashMap;
 
 /** */
 public class ColumnFileReader implements Closeable {
@@ -30,6 +32,7 @@ public class ColumnFileReader implements Closeable {
   private int columnCount;
   private ColumnFileMetaData metaData;
   private ColumnDescriptor[] columns;
+  private Map<String,ColumnDescriptor> columnsByName;
 
   public ColumnFileReader(File file) throws IOException {
     this(new InputFile(file));
@@ -55,6 +58,10 @@ public class ColumnFileReader implements Closeable {
     columns = new ColumnDescriptor[columnCount];
     readColumnMetaData(in);
     readColumnStarts(in);
+
+    this.columnsByName = new HashMap<String,ColumnDescriptor>(columnCount);
+    for (ColumnDescriptor column : columns)
+      columnsByName.put(column.metaData.getName(), column);
   }
 
   private void readMagic(InputBuffer in) throws IOException {
@@ -78,8 +85,19 @@ public class ColumnFileReader implements Closeable {
       columns[i].start = in.readFixed64();
   }
  
-  public <T> ColumnValues<T> getValues(final int column) throws IOException {
+  public <T> ColumnValues<T> getValues(String columnName) throws IOException {
+    return new ColumnValues<T>(getColumn(columnName));
+  }
+
+  public <T> ColumnValues<T> getValues(int column) throws IOException {
     return new ColumnValues<T>(columns[column]);
+  }
+
+  private ColumnDescriptor getColumn(String name) {
+    ColumnDescriptor column = columnsByName.get(name);
+    if (column == null)
+      throw new TrevniRuntimeException("No column named: "+name);
+    return column;
   }
 
   /** Close this reader. */

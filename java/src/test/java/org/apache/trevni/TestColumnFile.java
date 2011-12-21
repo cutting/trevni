@@ -57,7 +57,7 @@ public class TestColumnFile {
     ColumnFileReader in = new ColumnFileReader(FILE);
     Assert.assertEquals(COUNT, in.getRowCount());
     Assert.assertEquals(1, in.getColumnCount());
-    Iterator<Integer> i = in.getValues(0);
+    Iterator<Integer> i = in.getValues("test");
     int count = 0;
     while (i.hasNext()) {
       Assert.assertEquals(TestUtil.randomLength(random), (int)i.next());
@@ -80,7 +80,7 @@ public class TestColumnFile {
     ColumnFileReader in = new ColumnFileReader(FILE);
     Assert.assertEquals(COUNT, in.getRowCount());
     Assert.assertEquals(1, in.getColumnCount());
-    Iterator<Long> i = in.getValues(0);
+    Iterator<Long> i = in.getValues("test");
     int count = 0;
     while (i.hasNext()) {
       Assert.assertEquals(random.nextLong(), (long)i.next());
@@ -103,7 +103,7 @@ public class TestColumnFile {
     ColumnFileReader in = new ColumnFileReader(FILE);
     Assert.assertEquals(COUNT, in.getRowCount());
     Assert.assertEquals(1, in.getColumnCount());
-    Iterator<String> i = in.getValues(0);
+    Iterator<String> i = in.getValues("test");
     int count = 0;
     while (i.hasNext()) {
       Assert.assertEquals(TestUtil.randomString(random), i.next());
@@ -126,8 +126,8 @@ public class TestColumnFile {
     ColumnFileReader in = new ColumnFileReader(FILE);
     Assert.assertEquals(COUNT, in.getRowCount());
     Assert.assertEquals(2, in.getColumnCount());
-    Iterator<String> i = in.getValues(0);
-    Iterator<String> j = in.getValues(1);
+    Iterator<String> i = in.getValues("a");
+    Iterator<String> j = in.getValues("b");
     int count = 0;
     while (i.hasNext() && j.hasNext()) {
       Assert.assertEquals(random.nextInt(), i.next());
