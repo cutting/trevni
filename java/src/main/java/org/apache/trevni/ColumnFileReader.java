@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.Closeable;
 import java.io.File;
 import java.util.Arrays;
-import java.util.Iterator;
 
 /** */
 public class ColumnFileReader implements Closeable {
@@ -30,28 +29,7 @@ public class ColumnFileReader implements Closeable {
   private long rowCount;
   private int columnCount;
   private ColumnFileMetaData metaData;
-
-  private ColumnMetaData[] columns;
-  private long[] starts;
-  private long[] dataStarts;
-
-  private static class Block {
-    int valueCount;
-    int uncompressedSize;
-    int compressedSize;
-
-    private Block() {}                            // private ctor
-
-    public static Block read(InputBuffer in) throws IOException {
-      Block result = new Block();
-      result.valueCount = in.readFixed32();
-      result.uncompressedSize = in.readFixed32();
-      result.compressedSize = in.readFixed32();
-      return result;
-    }
-  }
-
-  private Block[][] blocks;
+  private ColumnDescriptor[] columns;
 
   public ColumnFileReader(File file) throws IOException {
     this(new InputFile(file));
@@ -60,8 +38,6 @@ public class ColumnFileReader implements Closeable {
   public ColumnFileReader(Input file) throws IOException {
     this.file = file;
     readHeader();
-    blocks = new Block[columnCount][];
-    dataStarts = new long[columnCount];
   }
 
   public long getRowCount() { return rowCount; }
@@ -75,6 +51,8 @@ public class ColumnFileReader implements Closeable {
     this.rowCount = in.readFixed64();
     this.columnCount = in.readFixed32();
     this.metaData = ColumnFileMetaData.read(in);
+
+    columns = new ColumnDescriptor[columnCount];
     readColumnMetaData(in);
     readColumnStarts(in);
   }
@@ -91,66 +69,18 @@ public class ColumnFileReader implements Closeable {
   }
 
   private void readColumnMetaData(InputBuffer in) throws IOException {
-    columns = new ColumnMetaData[columnCount];
     for (int i = 0; i < columnCount; i++)
-      columns[i] = ColumnMetaData.read(in);
+      columns[i] = new ColumnDescriptor(file, ColumnMetaData.read(in));
   }
 
   private void readColumnStarts(InputBuffer in) throws IOException {
-    starts = new long[columnCount];
     for (int i = 0; i < columnCount; i++)
-      starts[i] = in.readFixed64();
+      columns[i].start = in.readFixed64();
   }
  
-  public <T> Iterator<T> getValues(final int column) throws IOException {
-    return new Iterator<T>() {
-      private ValueType type = columns[column].getType();
-      private Block[] blocks = getColumnBlocks(column);
-      private int block = 0;
-      private InputBuffer in = new InputBuffer(file, dataStarts[column]);
-
-      public boolean hasNext() {
-        return block != blocks.length-1
-          || in.valueCount() != blocks[block].valueCount;
-      }
-
-      public T next() {
-        if (in.valueCount() >= blocks[block].valueCount) {
-          if (block >= blocks.length)
-            throw new TrevniRuntimeException("Read past end of column.");
-          readChecksum(in);
-          block++;
-          in.valueCount(0);
-        }
-        try {
-          return (T)in.readValue(type);
-        } catch (IOException e) {
-          throw new TrevniRuntimeException(e);
-        }
-      }
-
-      public void remove() { throw new UnsupportedOperationException(); }
-    };
+  public <T> ColumnValues<T> getValues(final int column) throws IOException {
+    return new ColumnValues<T>(columns[column]);
   }
-  
-  private Block[] getColumnBlocks(int column) throws IOException {
-    Block[] result = blocks[column];
-    if (result == null)
-      result = readColumnBlocks(column);
-    return result;
-  }
-
-  private Block[] readColumnBlocks(int column) throws IOException {
-    InputBuffer in = new InputBuffer(file, starts[column]);
-    int blockCount = in.readFixed32();
-    Block[] result = new Block[blockCount];
-    for (int i = 0; i < blockCount; i++)
-      result[i] = Block.read(in);
-    dataStarts[column] = in.tell();
-    return result;
-  }
-
-  private void readChecksum(InputBuffer in) {}
 
   /** Close this reader. */
   @Override

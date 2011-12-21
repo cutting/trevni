@@ -1,5 +1,5 @@
 Improvements/Optimizations:
-- split reader's iterator into separate class
+- change reader api to accept column names
 - implement iterator subclasses per type to avoid boxing & dispatch
 - change writer api to addRowValue(int column, T) to avoid allocations
 - add benchmarks
