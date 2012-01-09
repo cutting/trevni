@@ -132,8 +132,8 @@ Format Specification
 
   We assume a simple data model, where a record is a set of named
   fields, and the value of each field is a sequence of untyped bytes.
-  A type system may be layered on top of this.  Some examples of how
-  this might be done are given in the APIs section.
+  A type system may be layered on top of this, as specified in the
+  Type Mapping section below.
 
 * Primitive Values
 
@@ -239,7 +239,7 @@ whether subsequent bytes are present.  For example:
 
   No block metadata properties are currently defined.
 
-File Format
+* File Format
 
   A <<file>> consists of:
 
@@ -299,7 +299,7 @@ File Format
 
   []
 
-Codecs
+* Codecs
 
   [null] The "null" codec simply passes data through uncompressed.
 
@@ -308,14 +308,12 @@ Codecs
 
   [snappy] The "snappy" codec uses Google's Snappy compression library.
 
-Checksum algorithms
+* Checksum algorithms
 
   [null] The "null" checksum contains zero bytes.
 
   [crc-32c] Each "crc-32c" checksum contains the four bytes of an ISO
   3309 CRC-32C checksum of the uncompressed block data as a fixed32.
-
-Implementation Notes
 
 * Type Mappings
 
@@ -332,73 +330,7 @@ Implementation Notes
 
 ** Thrift
 
-APIs
-
-  An implementation might provide a low-level API to untyped data that
-  looks something like the following:
-
-+--
-class Block {
-  int column()
-  long firstRow();
-  long rows();
-  byte[] getBlockMeta(String key);
-  Block next();
-}
-
-class Reader {
-  long rows();
-  int columns();
-
-  byte[] getFileMeta(String key);
-  byte[] getColumnMeta(int column, String key);
-
-  Block getBlock(int column, long row);
-  Block getBlock(int column, byte[] key);
-
-  InputStream readBlock(Block block);
-}
-+--
-
-  Higher-level type-specific APIs can be created atop this.  These
-  would return errors if the named column is not of the requested
-  type, or, when value-based access is used, if the named column does
-  not store values in its block descriptors.
-
-+--
-  Iterator<Integer> getIntsByRow(int column, long startRow);
-  Iterator<Integer> getIntsByValue(int column, int start);
-
-  Iterator<Long> getLongsByRow(int column, long startRow);
-  Iterator<Long> getLongsByValue(int column, long start);
-
-  Iterator<String> getStringsByRow(int column, long startRow);
-  Iterator<String> getStringsByValue(int column, String start);
-
-  Iterator<ByteBuffer> getBytesByRow(int column, long startRow);
-  Iterator<ByteBuffer> getBytesByValue(int column, ByteBuffer start);
-+--
-
-  For example, here is pseudo-code to read a range of values from a column.
-
-+--
-void printRows(Reader r, int column, long start, long end) {
-  Schema s = Schema.parse(r.getColumnMeta(column, SCHEMA_PROP));
-  for (Block b = r.getBlock(column, start); 
-       b != null && b.firstRow() < end; 
-       b = b.next()) {
-    InputStream in = r.readBlock(b);
-    long stop = Math.min(end, b.firstRow() + b.rows());
-    for (long row = b.firstRow(); row < stop; row++)
-      if (row < start)
-        skipValue(s, in);
-      else
-        System.out.println(row + ”: ” + readValue(s, in));
-  }
-}
-+--
-
-File Creation
+Implementation Notes
 
   Some possible techniques for writing column files include:
 
