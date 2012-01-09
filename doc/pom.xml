@@ -26,17 +26,30 @@
   </parent>
 
   <groupId>org.apache.trevni</groupId>
-  <artifactId>trevni-project</artifactId>
+  <artifactId>trevni-doc</artifactId>
   <version>0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>Trevni Project</name>
+  <name>Trevni Documentation</name>
   <url>http://github.com/cutting/trevni</url>
   <description>Trevni Project</description>
 
-  <modules>
-    <module>doc</module>
-    <module>java</module>
-  </modules>
+  <build>
+    <!-- To define the plugin version in your parent POM -->
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-site-plugin</artifactId>
+          <version>3.0</version>
+          <configuration>
+            <generateReports>false</generateReports>
+            <siteDirectory>.</siteDirectory>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+  </build>
 
 </project>
