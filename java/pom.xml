@@ -30,13 +30,6 @@
   <url>http://github.com/cutting/trevni</url>
   <description>Trevni Java</description>
 
-  <properties>
-    <junit-version>4.10</junit-version>
-    <slf4j-version>1.6.3</slf4j-version>
-    <compiler-plugin-version>2.3.2</compiler-plugin-version>
-    <checkstyle-plugin-version>2.6</checkstyle-plugin-version>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>junit</groupId>

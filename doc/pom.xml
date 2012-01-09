@@ -36,13 +36,12 @@
   <description>Trevni Project</description>
 
   <build>
-    <!-- To define the plugin version in your parent POM -->
     <pluginManagement>
       <plugins>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-site-plugin</artifactId>
-          <version>3.0</version>
+          <version>${maven-site-plugin-version}</version>
           <configuration>
             <generateReports>false</generateReports>
             <siteDirectory>.</siteDirectory>
@@ -55,7 +54,7 @@
       <plugin>
         <groupId>com.github.github</groupId>
         <artifactId>site-maven-plugin</artifactId>
-        <version>0.3</version>
+        <version>${github-site-plugin-version}</version>
         <configuration>
           <message>Creating site for ${project.version}</message>
         </configuration>
