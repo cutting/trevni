@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project>
+  <skin>
+    <groupId>org.apache.maven.skins</groupId>
+    <artifactId>maven-stylus-skin</artifactId>
+    <version>1.2</version>
+  </skin>
+  <body>
+    <menu name="Trevni">
+      <item name="Spec" href="spec.html" />
+    </menu>
+  </body>
+</project>
