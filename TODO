@@ -12,9 +12,6 @@ Improvements/Optimizations:
 - change writer api to addRowValue(int column, T) to avoid allocations?
 - add benchmarks
 
-Documentation:
-- convert specification document to live w/ source
-
 Integration with other tools:
 - implement Avro record shredder
 - implement Protobuf record shredder
