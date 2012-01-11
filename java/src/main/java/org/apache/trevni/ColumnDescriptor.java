@@ -19,7 +19,8 @@ package org.apache.trevni;
 
 import java.io.IOException;
 
-/** */
+import java.util.Arrays;
+
 class ColumnDescriptor {
   final Input file;
   final ColumnMetaData metaData;
@@ -29,37 +30,52 @@ class ColumnDescriptor {
 
   private BlockDescriptor[] blocks;
 
+  long[] firstRows;                               // for binary searches
+  long[] blockStarts;                             // for random access
+
   public ColumnDescriptor(Input file, ColumnMetaData metaData) {
     this.file = file;
     this.metaData = metaData;
   }
 
-  public BlockDescriptor[] getBlocks() throws IOException {
-    if (blocks == null)
-      blocks = readBlocks();
-    return blocks;
+  public int findBlock(long row) {
+    int block = Arrays.binarySearch(firstRows, row);
+    if (block < 0)
+      block = -block - 2;
+    return block;
   }
 
-  private BlockDescriptor[] readBlocks() throws IOException {
+  public int blockCount() { return blocks.length; }
+
+  public long lastRow(int block) {
+    if (blocks.length == 0) return 0;
+    return firstRows[block] + blocks[block].rowCount;
+  }
+
+  public void ensureBlocksRead() throws IOException {
+    if (blocks != null) return;
+
     // read block descriptors
     InputBuffer in = new InputBuffer(file, start);
     int blockCount = in.readFixed32();
-    BlockDescriptor[] result = new BlockDescriptor[blockCount];
+    BlockDescriptor[] blocks = new BlockDescriptor[blockCount];
     for (int i = 0; i < blockCount; i++)
-      result[i] = BlockDescriptor.read(in);
+      blocks[i] = BlockDescriptor.read(in);
     dataStart = in.tell();
-
-    // add positions and rows to block descriptors
+    
+    // compute blockStarts and firstRows
+    blockStarts = new long[blocks.length];
+    firstRows = new long[blocks.length];
     long startPosition = dataStart;
     long row = 0;
     for (int i = 0; i < blockCount; i++) {
-      BlockDescriptor b = result[i];
-      b.startPosition = startPosition;
-      b.firstRow = row;
+      BlockDescriptor b = blocks[i];
+      blockStarts[i] = startPosition;
+      firstRows[i] = row;
       startPosition += b.uncompressedSize; //FIXME: add checksum size
       row += b.rowCount;
     }
-    return result;
+    this.blocks = blocks;
   }
 
 }

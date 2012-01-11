@@ -44,10 +44,8 @@ public class ColumnFileWriter {
     this.columns = columns;
     this.columnCount = columns.length;
     this.blocks = new List[columnCount];
-    for (int i = 0; i < columnCount; i++) {
+    for (int i = 0; i < columnCount; i++)
       blocks[i] = new ArrayList<OutputBuffer>();
-      blocks[i].add(new OutputBuffer());
-    }
   }
 
   /** Return the file's metadata. */
@@ -62,8 +60,8 @@ public class ColumnFileWriter {
 
   private OutputBuffer getLastBlock(int column) {
     List<OutputBuffer> all = blocks[column];
-    OutputBuffer last = all.get(all.size()-1);
-    if (last.isFull()) {                          // last is full
+    OutputBuffer last = all.size() == 0 ? null : all.get(all.size()-1);
+    if (last == null || last.isFull()) {          // last is missing or full
       last = new OutputBuffer();                  // add a new block to column
       all.add(last);
     }

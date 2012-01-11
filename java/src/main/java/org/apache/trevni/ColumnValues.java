@@ -19,16 +19,12 @@ package org.apache.trevni;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Arrays;
 
 /** An iterator over column values. */
 public class ColumnValues<T> implements Iterator<T>, Iterable<T> {
   private final ColumnDescriptor column;
   private final ValueType type;
-  private final BlockDescriptor[] blocks;
   private final InputBuffer in;
-
-  private final long[] firstRows;                 // for binary searches
 
   private int block = 0;
   private long row;
@@ -36,12 +32,9 @@ public class ColumnValues<T> implements Iterator<T>, Iterable<T> {
   ColumnValues(ColumnDescriptor column) throws IOException {
     this.column = column;
     this.type = column.metaData.getType();
-    this.blocks = column.getBlocks();
-    this.in = new InputBuffer(column.file, column.dataStart);
 
-    firstRows = new long[blocks.length];          // initialize firstRows
-    for (int i = 0; i < blocks.length; i++)
-      firstRows[i] = blocks[i].firstRow;
+    column.ensureBlocksRead();
+    this.in = new InputBuffer(column.file, column.dataStart);
   }
 
   /** Return the current row number within this file. */
@@ -49,12 +42,10 @@ public class ColumnValues<T> implements Iterator<T>, Iterable<T> {
 
   /** Seek to the named row. */
   public void seek(long r) throws IOException {
-    if (r < row || r >= blocks[block].lastRow()) { // not in current block
-      block = Arrays.binarySearch(firstRows, r);  // find block
-      if (block < 0)
-        block = -block - 2;
-      row = blocks[block].firstRow;               // seek to block
-      in.seek(blocks[block].startPosition);
+    if (r < row || r >= column.lastRow(block)) {  // not in current block
+      block = column.findBlock(r);                // find block
+      row = column.firstRows[block];              // seek to block
+      in.seek(column.blockStarts[block]);
     }
     while (r > row && hasNext()) {                // skip within block
       in.skipValue(type);
@@ -65,12 +56,12 @@ public class ColumnValues<T> implements Iterator<T>, Iterable<T> {
   @Override public Iterator iterator() { return this; }
 
   @Override public boolean hasNext() {
-    return block < blocks.length-1 || row < blocks[block].lastRow();
+    return block < column.blockCount()-1 || row < column.lastRow(block);
   }
 
   @Override public T next() {
-    if (row >= blocks[block].lastRow()) {
-      if (block >= blocks.length)
+    if (row >= column.lastRow(block)) {
+      if (block >= column.blockCount())
         throw new TrevniRuntimeException("Read past end of column.");
       readChecksum();
       block++;

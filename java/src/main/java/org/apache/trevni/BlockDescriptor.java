@@ -24,9 +24,6 @@ class BlockDescriptor {
   int uncompressedSize;
   int compressedSize;
 
-  transient long firstRow;
-  transient long startPosition;
-
   BlockDescriptor() {}
   
   public static BlockDescriptor read(InputBuffer in) throws IOException {
@@ -36,7 +33,5 @@ class BlockDescriptor {
     result.compressedSize = in.readFixed32();
     return result;
   }
-
-  public long lastRow() { return firstRow + rowCount; }
 
 }

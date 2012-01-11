@@ -35,13 +35,27 @@ public class TestColumnFile {
   private static final File FILE = new File("target", "test.trv");
   private static final int COUNT = 1024*128;
 
-  @Test public void testEmpty() throws Exception {
+  @Test public void testEmptyFile() throws Exception {
     FILE.delete();
     ColumnFileWriter out = new ColumnFileWriter();
     out.writeTo(FILE);
     ColumnFileReader in = new ColumnFileReader(FILE);
     Assert.assertEquals(0, in.getRowCount());
     Assert.assertEquals(0, in.getColumnCount());
+    in.close();
+  }
+
+  @Test public void testEmptyColumn() throws Exception {
+    FILE.delete();
+    ColumnFileWriter out =
+      new ColumnFileWriter(new ColumnMetaData("test", ValueType.INT));
+    out.writeTo(FILE);
+    ColumnFileReader in = new ColumnFileReader(FILE);
+    Assert.assertEquals(0, in.getRowCount());
+    Assert.assertEquals(1, in.getColumnCount());
+    ColumnValues<Integer> values = in.getValues("test");
+    for (int i : values)
+      throw new Exception("no value should be found");
     in.close();
   }
 
