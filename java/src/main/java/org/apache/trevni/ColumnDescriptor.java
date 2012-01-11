@@ -41,20 +41,24 @@ class ColumnDescriptor {
   }
 
   private BlockDescriptor[] readBlocks() throws IOException {
+    // read block descriptors
     InputBuffer in = new InputBuffer(file, start);
     int blockCount = in.readFixed32();
     BlockDescriptor[] result = new BlockDescriptor[blockCount];
-    long startPosition = start;
+    for (int i = 0; i < blockCount; i++)
+      result[i] = BlockDescriptor.read(in);
+    dataStart = in.tell();
+
+    // add positions and rows to block descriptors
+    long startPosition = dataStart;
     long row = 0;
     for (int i = 0; i < blockCount; i++) {
-      BlockDescriptor b = BlockDescriptor.read(in);
-      b.firstRow = row;
+      BlockDescriptor b = result[i];
       b.startPosition = startPosition;
-      row += b.rowCount;
+      b.firstRow = row;
       startPosition += b.uncompressedSize; //FIXME: add checksum size
-      result[i] = b;
+      row += b.rowCount;
     }
-    dataStart = in.tell();
     return result;
   }
 
