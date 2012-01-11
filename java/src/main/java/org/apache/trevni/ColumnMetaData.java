@@ -61,7 +61,7 @@ public class ColumnMetaData extends MetaData {
   }
 
   /** Get whether this column has an index of blocks by value. */
-  public boolean getValues(String values) { return get(VALUES_KEY) != null; }
+  public boolean getValues() { return get(VALUES_KEY) != null; }
 
   static ColumnMetaData read(InputBuffer in) throws IOException {
     ColumnMetaData result = new ColumnMetaData();

@@ -18,32 +18,23 @@
 package org.apache.trevni;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
-class BlockDescriptor {
-  int rowCount;
-  int uncompressedSize;
-  int compressedSize;
+/** Interface for compression codecs. */
+abstract class Codec {
 
-  BlockDescriptor() {}
-  
-  BlockDescriptor(int rowCount, int uncompressedSize, int compressedSize) {
-    this.rowCount = rowCount;
-    this.uncompressedSize = uncompressedSize;
-    this.compressedSize = compressedSize;
-  }
-  
-  public void writeTo(OutputBuffer out) throws IOException {
-    out.writeFixed32(rowCount);
-    out.writeFixed32(uncompressedSize);
-    out.writeFixed32(compressedSize);
+  public static Codec get(MetaData meta) {
+    String name = meta.getCodec();
+    if (name == null || "null".equals(name))
+      return new NullCodec();
+    else
+      throw new TrevniRuntimeException("Unknown codec: "+name);
   }
 
-  public static BlockDescriptor read(InputBuffer in) throws IOException {
-    BlockDescriptor result = new BlockDescriptor();
-    result.rowCount = in.readFixed32();
-    result.uncompressedSize = in.readFixed32();
-    result.compressedSize = in.readFixed32();
-    return result;
-  }
+  /** Compress data */
+  abstract ByteBuffer compress(ByteBuffer uncompressedData) throws IOException;
+
+  /** Decompress data  */
+  abstract ByteBuffer decompress(ByteBuffer compressedData) throws IOException;
 
 }

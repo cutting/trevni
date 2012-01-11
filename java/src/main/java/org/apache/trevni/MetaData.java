@@ -27,12 +27,30 @@ public class MetaData extends LinkedHashMap<String,byte[]> {
 
   static final String RESERVED_KEY_PREFIX = "trevni.";
 
+  static final String CODEC_KEY = RESERVED_KEY_PREFIX + "codec";
+
   private static final Charset UTF8 = Charset.forName("UTF-8");
 
+  private MetaData defaults;
+
+  void setDefaults(MetaData defaults) { this.defaults = defaults; }
+
+  /** Return the compression codec name. */
+  public String getCodec() { return getString(CODEC_KEY); }
+
+  /** Set the compression codec name. */
+  public MetaData setCodec(String codec) {
+    setReserved(CODEC_KEY, codec);
+    return this;
+  }
+   
   /** Return the value of a metadata property as a String. */
   public String getString(String key) {
     byte[] value = get(key);
-    if (value == null) return null;
+    if (value == null && defaults != null)
+      value = defaults.get(key);
+    if (value == null)
+      return null;
     return new String(value, UTF8);
   }
 

@@ -22,20 +22,10 @@ import java.io.IOException;
 /** File-level metadata. */
 public class ColumnFileMetaData extends MetaData {
 
-  static final String CODEC_KEY = RESERVED_KEY_PREFIX + "codec";
   static final String CHECKSUM_KEY = RESERVED_KEY_PREFIX + "checksum";
 
-  /** Return the compression codec name. */
-  public String getCodec(String codec) { return getString(CODEC_KEY); }
-
-  /** Set the compression codec name. */
-  public ColumnFileMetaData setCodec(String codec) {
-    setReserved(CODEC_KEY, codec);
-    return this;
-  }
-   
   /** Return the checksum algorithm name. */
-  public String getChecksum(String checksum) { return getString(CHECKSUM_KEY); }
+  public String getChecksum() { return getString(CHECKSUM_KEY); }
 
   /** Set the checksum algorithm name. */
   public ColumnFileMetaData setChecksum(String checksum) {

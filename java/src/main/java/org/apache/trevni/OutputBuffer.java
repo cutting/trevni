@@ -35,6 +35,8 @@ class OutputBuffer extends ByteArrayOutputStream {
 
   public boolean isFull() { return size() >= BLOCK_SIZE; }
 
+  public ByteBuffer asByteBuffer() { return ByteBuffer.wrap(buf, 0, count); }
+
   public void writeValue(Object value, ValueType type)
     throws IOException {
     switch (type) {
