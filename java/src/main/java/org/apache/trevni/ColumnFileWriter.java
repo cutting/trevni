@@ -145,7 +145,7 @@ public class ColumnFileWriter {
                                     OutputBuffer header)
     throws IOException {
 
-    header.writeFixed32(block.getValueCount()); // value count
+    header.writeFixed32(block.getRowCount());   // number of rows
     header.writeFixed32(block.size());          // uncompressed size
     header.writeFixed32(block.size());          // compressed size
   }

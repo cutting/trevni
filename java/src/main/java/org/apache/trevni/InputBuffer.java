@@ -33,8 +33,6 @@ class InputBuffer {
   private int pos;                                // position within buffer
   private int limit;                              // end of valid buffer data
 
-  private int valueCount;
-
   public InputBuffer(Input in) throws IOException { this(in, 0); }
 
   public InputBuffer(Input in, long position) throws IOException {
@@ -65,12 +63,7 @@ class InputBuffer {
 
   public long length() { return inLength; }
 
-  public int valueCount() { return valueCount; }
-  public void valueCount(int valueCount) { this.valueCount = valueCount; }
-
-  public Object readValue(ValueType type)
-    throws IOException {
-    valueCount++;
+  public Object readValue(ValueType type) throws IOException {
     switch (type) {
     case INT:
       return readInt();
@@ -88,6 +81,26 @@ class InputBuffer {
       return readString();
     case BYTES:
       return readBytes();
+    default:
+      throw new TrevniRuntimeException("Unknown value type: "+type);
+    }
+  }
+
+  public void skipValue(ValueType type) throws IOException {
+    switch (type) {
+    case INT:
+      readInt();    break;
+    case LONG:
+      readLong();   break;
+    case FIXED32:
+    case DOUBLE:
+      skip(4);      break;
+    case FIXED64:
+    case FLOAT:
+      skip(8);      break;
+    case STRING:
+    case BYTES:
+      skipBytes();  break;
     default:
       throw new TrevniRuntimeException("Unknown value type: "+type);
     }

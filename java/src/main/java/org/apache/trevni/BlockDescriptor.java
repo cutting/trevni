@@ -20,19 +20,23 @@ package org.apache.trevni;
 import java.io.IOException;
 
 class BlockDescriptor {
-  int valueCount;
+  int rowCount;
   int uncompressedSize;
   int compressedSize;
-  
+
+  transient long firstRow;
+  transient long startPosition;
+
   BlockDescriptor() {}
   
   public static BlockDescriptor read(InputBuffer in) throws IOException {
     BlockDescriptor result = new BlockDescriptor();
-    result.valueCount = in.readFixed32();
+    result.rowCount = in.readFixed32();
     result.uncompressedSize = in.readFixed32();
     result.compressedSize = in.readFixed32();
     return result;
   }
 
-}
+  public long lastRow() { return firstRow + rowCount; }
 
+}

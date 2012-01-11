@@ -44,8 +44,16 @@ class ColumnDescriptor {
     InputBuffer in = new InputBuffer(file, start);
     int blockCount = in.readFixed32();
     BlockDescriptor[] result = new BlockDescriptor[blockCount];
-    for (int i = 0; i < blockCount; i++)
-      result[i] = BlockDescriptor.read(in);
+    long startPosition = start;
+    long row = 0;
+    for (int i = 0; i < blockCount; i++) {
+      BlockDescriptor b = BlockDescriptor.read(in);
+      b.firstRow = row;
+      b.startPosition = startPosition;
+      row += b.rowCount;
+      startPosition += b.uncompressedSize; //FIXME: add checksum size
+      result[i] = b;
+    }
     dataStart = in.tell();
     return result;
   }

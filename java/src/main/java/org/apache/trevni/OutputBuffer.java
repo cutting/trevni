@@ -27,11 +27,11 @@ import java.util.Arrays;
 class OutputBuffer extends ByteArrayOutputStream {
   static final int BLOCK_SIZE = 64 * 1024;
 
-  private int valueCount;
+  private int rowCount;
 
   public OutputBuffer() { super(BLOCK_SIZE + BLOCK_SIZE >> 2); }
 
-  public int getValueCount() { return valueCount; }
+  public int getRowCount() { return rowCount; }
 
   public boolean isFull() { return size() >= BLOCK_SIZE; }
 
@@ -61,7 +61,7 @@ class OutputBuffer extends ByteArrayOutputStream {
     default:
       throw new TrevniRuntimeException("Unknown value type: "+type);
     }
-    valueCount++;
+    rowCount++;
   }
 
   private static final Charset UTF8 = Charset.forName("UTF-8");
