@@ -4,7 +4,6 @@ Complete implementation of specification:
 - implement index values
 
 Features:
-- implement random access by row
 - implement random access by value
 
 Improvements/Optimizations:
