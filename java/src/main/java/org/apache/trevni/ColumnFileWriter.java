@@ -29,24 +29,23 @@ public class ColumnFileWriter {
 
   static final byte[] MAGIC = new byte[] {'T', 'r', 'v', 0};
 
-  private ColumnFileMetaData metaData = new ColumnFileMetaData();
+  private ColumnFileMetaData metaData;
   private ColumnOutputBuffer[] columns;
 
   private long rowCount;
   private int columnCount;
 
   /** Construct given metadata for each column in the file. */
-  public ColumnFileWriter(ColumnMetaData... meta) throws IOException {
-    this.columnCount = meta.length;
+  public ColumnFileWriter(ColumnFileMetaData fileMeta,
+                          ColumnMetaData... columnMeta) throws IOException {
+    this.metaData = fileMeta;
+    this.columnCount = columnMeta.length;
     this.columns = new ColumnOutputBuffer[columnCount];
     for (int i = 0; i < columnCount; i++) {
-      meta[i].setDefaults(metaData);
-      columns[i] = new ColumnOutputBuffer(meta[i]);
+      columnMeta[i].setDefaults(metaData);
+      columns[i] = new ColumnOutputBuffer(columnMeta[i]);
     }
   }
-
-  /** Return the file's metadata. */
-  public ColumnFileMetaData getMetaData() { return metaData; }
 
   /** Add a row to the file. */
   public void writeRow(Object... row) throws IOException {

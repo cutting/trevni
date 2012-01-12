@@ -27,6 +27,8 @@ abstract class Codec {
     String name = meta.getCodec();
     if (name == null || "null".equals(name))
       return new NullCodec();
+    else if ("snappy".equals(name))
+      return new SnappyCodec();
     else
       throw new TrevniRuntimeException("Unknown codec: "+name);
   }

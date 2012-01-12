@@ -72,7 +72,7 @@ class ColumnDescriptor {
       BlockDescriptor b = blocks[i];
       blockStarts[i] = startPosition;
       firstRows[i] = row;
-      startPosition += b.uncompressedSize; //FIXME: add checksum size
+      startPosition += b.compressedSize;          //FIXME: add checksum size
       row += b.rowCount;
     }
     this.blocks = blocks;

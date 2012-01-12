@@ -102,8 +102,11 @@ public class ColumnFileReader implements Closeable {
   }
 
   private void readColumnMetaData(InputBuffer in) throws IOException {
-    for (int i = 0; i < columnCount; i++)
-      columns[i] = new ColumnDescriptor(file, ColumnMetaData.read(in));
+    for (int i = 0; i < columnCount; i++) {
+      ColumnMetaData meta = ColumnMetaData.read(in);
+      meta.setDefaults(this.metaData);
+      columns[i] = new ColumnDescriptor(file, meta);
+    }
   }
 
   private void readColumnStarts(InputBuffer in) throws IOException {

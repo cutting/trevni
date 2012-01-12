@@ -59,7 +59,7 @@ public class ColumnValues<T> implements Iterator<T>, Iterable<T> {
     this.row = column.firstRows[block];
 
     in.seek(column.blockStarts[block]);
-    byte[] raw = new byte[column.blocks[block].uncompressedSize];
+    byte[] raw = new byte[column.blocks[block].compressedSize];
     in.readFully(raw);
     ByteBuffer data = codec.decompress(ByteBuffer.wrap(raw));
     values = new InputBuffer(new InputBytes(data));

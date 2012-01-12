@@ -18,25 +18,28 @@
 package org.apache.trevni;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import org.xerial.snappy.Snappy;
 
-/** File-level metadata. */
-public class ColumnFileMetaData extends MetaData<ColumnFileMetaData> {
+/** Implements <a href="http://code.google.com/p/snappy/">Snappy</a> codec. */
+final class SnappyCodec extends Codec {
 
-  static final String CHECKSUM_KEY = RESERVED_KEY_PREFIX + "checksum";
-
-  /** Return the checksum algorithm name. */
-  public String getChecksum() { return getString(CHECKSUM_KEY); }
-
-  /** Set the checksum algorithm name. */
-  public ColumnFileMetaData setChecksum(String checksum) {
-    setReserved(CHECKSUM_KEY, checksum);
-    return this;
+  @Override ByteBuffer compress(ByteBuffer in) throws IOException {
+    ByteBuffer out =
+      ByteBuffer.allocate(Snappy.maxCompressedLength(in.remaining()));
+    int size = Snappy.compress(in.array(), in.position(), in.remaining(),
+                               out.array(), 0);
+    out.limit(size);
+    return out;
   }
 
-  static ColumnFileMetaData read(InputBuffer in) throws IOException {
-    ColumnFileMetaData result = new ColumnFileMetaData();
-    MetaData.read(in, result);
-    return result;
+  @Override ByteBuffer decompress(ByteBuffer in) throws IOException {
+    ByteBuffer out = ByteBuffer.allocate
+      (Snappy.uncompressedLength(in.array(),in.position(),in.remaining()));
+    int size = Snappy.uncompress(in.array(),in.position(),in.remaining(),
+                                 out.array(), 0);
+    out.limit(size);
+    return out;
   }
 
 }

@@ -22,6 +22,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Collection;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
@@ -29,15 +30,32 @@ import java.util.HashMap;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
+@RunWith(value = Parameterized.class)
 public class TestColumnFile {
 
   private static final File FILE = new File("target", "test.trv");
   private static final int COUNT = 1024*128;
 
+  private String codec;
+
+  public TestColumnFile(String codec) {
+    this.codec = codec;
+  }
+
+  @Parameters public static Collection<Object[]> codecs() {
+    Object[][] data = new Object[][] {{"null"}, {"snappy"}};
+    return Arrays.asList(data);
+  }
+
+
   @Test public void testEmptyFile() throws Exception {
     FILE.delete();
-    ColumnFileWriter out = new ColumnFileWriter();
+    ColumnFileWriter out =
+      new ColumnFileWriter(new ColumnFileMetaData().setCodec(codec));
     out.writeTo(FILE);
     ColumnFileReader in = new ColumnFileReader(FILE);
     Assert.assertEquals(0, in.getRowCount());
@@ -48,7 +66,8 @@ public class TestColumnFile {
   @Test public void testEmptyColumn() throws Exception {
     FILE.delete();
     ColumnFileWriter out =
-      new ColumnFileWriter(new ColumnMetaData("test", ValueType.INT));
+      new ColumnFileWriter(new ColumnFileMetaData().setCodec(codec),
+                           new ColumnMetaData("test", ValueType.INT));
     out.writeTo(FILE);
     ColumnFileReader in = new ColumnFileReader(FILE);
     Assert.assertEquals(0, in.getRowCount());
@@ -63,7 +82,8 @@ public class TestColumnFile {
     FILE.delete();
 
     ColumnFileWriter out =
-      new ColumnFileWriter(new ColumnMetaData("test", ValueType.INT));
+      new ColumnFileWriter(new ColumnFileMetaData().setCodec(codec),
+                           new ColumnMetaData("test", ValueType.INT));
     Random random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
       out.writeRow(TestUtil.randomLength(random));
@@ -86,7 +106,8 @@ public class TestColumnFile {
     FILE.delete();
 
     ColumnFileWriter out =
-      new ColumnFileWriter(new ColumnMetaData("test", ValueType.LONG));
+      new ColumnFileWriter(new ColumnFileMetaData().setCodec(codec),
+                           new ColumnMetaData("test", ValueType.LONG));
     Random random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
       out.writeRow(random.nextLong());
@@ -109,7 +130,8 @@ public class TestColumnFile {
     FILE.delete();
 
     ColumnFileWriter out =
-      new ColumnFileWriter(new ColumnMetaData("test", ValueType.STRING));
+      new ColumnFileWriter(new ColumnFileMetaData().setCodec(codec),
+                           new ColumnMetaData("test", ValueType.STRING));
     Random random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
       out.writeRow(TestUtil.randomString(random));
@@ -131,7 +153,8 @@ public class TestColumnFile {
   @Test public void testTwoColumn() throws Exception {
     FILE.delete();
     ColumnFileWriter out =
-      new ColumnFileWriter(new ColumnMetaData("a", ValueType.FIXED32),
+      new ColumnFileWriter(new ColumnFileMetaData().setCodec(codec),
+                           new ColumnMetaData("a", ValueType.FIXED32),
                            new ColumnMetaData("b", ValueType.STRING));
     Random random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
@@ -157,7 +180,8 @@ public class TestColumnFile {
     FILE.delete();
 
     ColumnFileWriter out =
-      new ColumnFileWriter(new ColumnMetaData("test", ValueType.LONG));
+      new ColumnFileWriter(new ColumnFileMetaData().setCodec(codec),
+                           new ColumnMetaData("test", ValueType.LONG));
     Random random = TestUtil.createRandom();
 
     int[] testRows = new int[COUNT/1024];
