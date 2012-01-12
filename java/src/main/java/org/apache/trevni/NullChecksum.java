@@ -24,8 +24,8 @@ final class NullChecksum extends Checksum {
 
   @Override public int size() { return 0; }
 
-  @Override public byte[] compute(ByteBuffer data) {
-    return new byte[0];
+  @Override public ByteBuffer compute(ByteBuffer data) {
+    return ByteBuffer.allocate(0);
   }
 
 }

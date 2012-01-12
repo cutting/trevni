@@ -34,6 +34,6 @@ abstract class Checksum {
   public abstract int size();
 
   /** Compute a checksum. */
-  public abstract byte[] compute(ByteBuffer data);
+  public abstract ByteBuffer compute(ByteBuffer data);
 
 }

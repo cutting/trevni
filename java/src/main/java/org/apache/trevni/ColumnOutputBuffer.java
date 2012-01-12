@@ -51,17 +51,17 @@ class ColumnOutputBuffer {
   public void flushBuffer() throws IOException {
     if (buffer.getRowCount() == 0) return;
     ByteBuffer raw = buffer.asByteBuffer();
-    ByteBuffer c = codec.compress(raw);           // compress
-
-    byte[] data = new byte[c.remaining() + checksum.size()];
-    System.arraycopy(c.array(), c.position(), data, 0, c.limit());
-    System.arraycopy(checksum.compute(raw), 0,
-                     data, c.limit(), checksum.size());
-    blockData.add(data);
+    ByteBuffer c = codec.compress(raw);
 
     blockDescriptors.add(new BlockDescriptor(buffer.getRowCount(),
                                              raw.remaining(),
                                              c.remaining()));
+
+    ByteBuffer data = ByteBuffer.allocate(c.remaining() + checksum.size());
+    data.put(c);
+    data.put(checksum.compute(raw));
+    blockData.add(data.array());
+
     buffer = new OutputBuffer();
   }
 

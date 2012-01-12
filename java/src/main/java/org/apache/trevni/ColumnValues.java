@@ -26,6 +26,7 @@ public class ColumnValues<T> implements Iterator<T>, Iterable<T> {
   private final ColumnDescriptor column;
   private final ValueType type;
   private final Codec codec;
+  private final Checksum checksum;
   private final InputBuffer in;
 
   private InputBuffer values;
@@ -36,6 +37,7 @@ public class ColumnValues<T> implements Iterator<T>, Iterable<T> {
     this.column = column;
     this.type = column.metaData.getType();
     this.codec = Codec.get(column.metaData);
+    this.checksum = Checksum.get(column.metaData);
     this.in = new InputBuffer(column.file);
 
     column.ensureBlocksRead();
@@ -59,9 +61,13 @@ public class ColumnValues<T> implements Iterator<T>, Iterable<T> {
     this.row = column.firstRows[block];
 
     in.seek(column.blockStarts[block]);
-    byte[] raw = new byte[column.blocks[block].compressedSize];
+    int end = column.blocks[block].compressedSize;
+    byte[] raw = new byte[end+checksum.size()];
     in.readFully(raw);
-    ByteBuffer data = codec.decompress(ByteBuffer.wrap(raw));
+    ByteBuffer data = codec.decompress(ByteBuffer.wrap(raw, 0, end));
+    if (!checksum.compute(data).equals
+        (ByteBuffer.wrap(raw, end, checksum.size())))
+      throw new IOException("Checksums mismatch.");
     values = new InputBuffer(new InputBytes(data));
   }
 
@@ -76,7 +82,6 @@ public class ColumnValues<T> implements Iterator<T>, Iterable<T> {
       if (row >= column.lastRow(block)) {
         if (block >= column.blockCount())
           throw new TrevniRuntimeException("Read past end of column.");
-        readChecksum();
         startBlock(block+1);
       }
       row++;
@@ -87,8 +92,6 @@ public class ColumnValues<T> implements Iterator<T>, Iterable<T> {
   }
 
   @Override public void remove() { throw new UnsupportedOperationException(); }
-
-  private void readChecksum() {}
 
 }
   
