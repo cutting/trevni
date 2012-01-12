@@ -17,15 +17,15 @@
  */
 package org.apache.trevni;
 
-import java.io.IOException;
+import java.nio.ByteBuffer;
 
-/** File-level metadata. */
-public class ColumnFileMetaData extends MetaData<ColumnFileMetaData> {
+/** Implements "null" (empty) checksum. */
+final class NullChecksum extends Checksum {
 
-  static ColumnFileMetaData read(InputBuffer in) throws IOException {
-    ColumnFileMetaData result = new ColumnFileMetaData();
-    MetaData.read(in, result);
-    return result;
+  @Override public int size() { return 0; }
+
+  @Override public byte[] compute(ByteBuffer data) {
+    return new byte[0];
   }
 
 }

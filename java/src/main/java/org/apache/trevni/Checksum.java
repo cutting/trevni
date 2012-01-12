@@ -17,15 +17,23 @@
  */
 package org.apache.trevni;
 
-import java.io.IOException;
+import java.nio.ByteBuffer;
 
-/** File-level metadata. */
-public class ColumnFileMetaData extends MetaData<ColumnFileMetaData> {
+/** Interface for checksum algorithms. */
+abstract class Checksum {
 
-  static ColumnFileMetaData read(InputBuffer in) throws IOException {
-    ColumnFileMetaData result = new ColumnFileMetaData();
-    MetaData.read(in, result);
-    return result;
+  public static Checksum get(MetaData meta) {
+    String name = meta.getChecksum();
+    if (name == null || "null".equals(name))
+      return new NullChecksum();
+    else
+      throw new TrevniRuntimeException("Unknown checksum: "+name);
   }
+
+  /** The number of bytes per checksum. */
+  public abstract int size();
+
+  /** Compute a checksum. */
+  public abstract byte[] compute(ByteBuffer data);
 
 }

@@ -21,12 +21,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 class ColumnOutputBuffer {
   private ColumnMetaData meta;
   private Codec codec;
+  private Checksum checksum;
   private OutputBuffer buffer;
   private List<BlockDescriptor> blockDescriptors;
   private List<byte[]> blockData;
@@ -34,6 +34,7 @@ class ColumnOutputBuffer {
   public ColumnOutputBuffer(ColumnMetaData meta) throws IOException {
     this.meta = meta;
     this.codec = Codec.get(meta);
+    this.checksum = Checksum.get(meta);
     this.buffer = new OutputBuffer();
     this.blockDescriptors = new ArrayList<BlockDescriptor>();
     this.blockData = new ArrayList<byte[]>();
@@ -50,22 +51,26 @@ class ColumnOutputBuffer {
   public void flushBuffer() throws IOException {
     if (buffer.getRowCount() == 0) return;
     ByteBuffer raw = buffer.asByteBuffer();
-    ByteBuffer c = codec.compress(raw); 
-    byte[] trimmed = Arrays.copyOfRange(c.array(), c.position(), c.limit());
+    ByteBuffer c = codec.compress(raw);           // compress
+
+    byte[] data = new byte[c.remaining() + checksum.size()];
+    System.arraycopy(c.array(), c.position(), data, 0, c.limit());
+    System.arraycopy(checksum.compute(raw), 0,
+                     data, c.limit(), checksum.size());
+    blockData.add(data);
+
     blockDescriptors.add(new BlockDescriptor(buffer.getRowCount(),
                                              raw.remaining(),
-                                             trimmed.length));
-    blockData.add(trimmed);
+                                             c.remaining()));
     buffer = new OutputBuffer();
   }
 
   public long size() throws IOException {
     flushBuffer();
     long size = 4;                                // count of blocks
-    for (BlockDescriptor descriptor: blockDescriptors) {
-      size += 4 * 3;                              // descriptor
-      size += descriptor.compressedSize;          // data
-    }
+    size += 4 * 3 * blockDescriptors.size();      // descriptors
+    for (byte[] data : blockData)
+      size += data.length;                        // data
     return size;
   }
 
