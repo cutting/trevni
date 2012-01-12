@@ -28,7 +28,7 @@ class ColumnDescriptor {
   long start;
   long dataStart;
 
-  private BlockDescriptor[] blocks;
+  BlockDescriptor[] blocks;
 
   long[] firstRows;                               // for binary searches
   long[] blockStarts;                             // for random access
@@ -48,7 +48,7 @@ class ColumnDescriptor {
   public int blockCount() { return blocks.length; }
 
   public long lastRow(int block) {
-    if (blocks.length == 0) return 0;
+    if (blocks.length == 0 || block < 0) return 0;
     return firstRows[block] + blocks[block].rowCount;
   }
 
