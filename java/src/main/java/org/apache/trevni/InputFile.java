@@ -19,23 +19,31 @@ package org.apache.trevni;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.nio.channels.FileChannel;
+import java.nio.ByteBuffer;
 import java.io.IOException;
 
 /** A {@link FileInputStream} that implements {@link Input}. */
-public class InputFile extends FileInputStream implements Input {
+public class InputFile implements Input {
+
+  private FileChannel channel;
 
   /** Construct for the given file. */
-  public InputFile(File file) throws IOException { super(file); }
-
-  @Override
-  public long length() throws IOException { return getChannel().size(); }
-
-  @Override
-  public synchronized int read(long position, byte[] b, int start, int len)
-    throws IOException {
-    getChannel().position(position);
-    return super.read(b, start, len);
+  public InputFile(File file) throws IOException {
+    this.channel = new FileInputStream(file).getChannel();
   }
+
+  @Override
+  public long length() throws IOException { return channel.size(); }
+
+  @Override
+  public int read(long position, byte[] b, int start, int len)
+    throws IOException {
+    return channel.read(ByteBuffer.wrap(b, start, len), position);
+  }
+
+  @Override
+  public void close() throws IOException { channel.close(); }
 
 }
 
