@@ -94,4 +94,3 @@ public class ColumnValues<T> implements Iterator<T>, Iterable<T> {
   @Override public void remove() { throw new UnsupportedOperationException(); }
 
 }
-  

@@ -26,6 +26,8 @@ abstract class Checksum {
     String name = meta.getChecksum();
     if (name == null || "null".equals(name))
       return new NullChecksum();
+    else if ("crc32".equals(name))
+      return new Crc32Checksum();
     else
       throw new TrevniRuntimeException("Unknown checksum: "+name);
   }

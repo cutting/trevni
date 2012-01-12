@@ -64,6 +64,7 @@ class ColumnDescriptor {
     dataStart = in.tell();
     
     // compute blockStarts and firstRows
+    Checksum checksum = Checksum.get(metaData);
     blockStarts = new long[blocks.length];
     firstRows = new long[blocks.length];
     long startPosition = dataStart;
@@ -72,7 +73,7 @@ class ColumnDescriptor {
       BlockDescriptor b = blocks[i];
       blockStarts[i] = startPosition;
       firstRows[i] = row;
-      startPosition += b.compressedSize;          //FIXME: add checksum size
+      startPosition += b.compressedSize + checksum.size();
       row += b.rowCount;
     }
     this.blocks = blocks;
