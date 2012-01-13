@@ -67,11 +67,11 @@ public class ColumnFileReader implements Closeable {
     return getColumn(name).metaData;
   }
 
-  private ColumnDescriptor getColumn(String name) {
+  private <T extends Comparable> ColumnDescriptor<T> getColumn(String name) {
     ColumnDescriptor column = columnsByName.get(name);
     if (column == null)
       throw new TrevniRuntimeException("No column named: "+name);
-    return column;
+    return (ColumnDescriptor<T>)column;
   }
 
   private void readHeader() throws IOException {
@@ -115,12 +115,14 @@ public class ColumnFileReader implements Closeable {
   }
  
   /** Return an iterator over values in the named column. */
-  public <T> ColumnValues<T> getValues(String columnName) throws IOException {
+  public <T extends Comparable> ColumnValues<T> getValues(String columnName)
+    throws IOException {
     return new ColumnValues<T>(getColumn(columnName));
   }
 
   /** Return an iterator over values in a column. */
-  public <T> ColumnValues<T> getValues(int column) throws IOException {
+  public <T extends Comparable> ColumnValues<T> getValues(int column)
+    throws IOException {
     return new ColumnValues<T>(columns[column]);
   }
 

@@ -22,7 +22,9 @@ import java.nio.ByteBuffer;
 import java.util.Iterator;
 
 /** An iterator over column values. */
-public class ColumnValues<T> implements Iterator<T>, Iterable<T> {
+public class ColumnValues<T extends Comparable>
+  implements Iterator<T>, Iterable<T> {
+
   private final ColumnDescriptor column;
   private final ValueType type;
   private final Codec codec;
@@ -32,6 +34,7 @@ public class ColumnValues<T> implements Iterator<T>, Iterable<T> {
   private InputBuffer values;
   private int block = -1;
   private long row = 0;
+  private T previous; 
 
   ColumnValues(ColumnDescriptor column) throws IOException {
     this.column = column;
@@ -53,6 +56,30 @@ public class ColumnValues<T> implements Iterator<T>, Iterable<T> {
     while (r > row && hasNext()) {                // skip within block
       values.skipValue(type);
       row++;
+    }
+    previous = null;
+  }
+
+  /** Seek to the named value. */
+  public void seek(T v) throws IOException {
+    if (!column.metaData.getValues())
+      throw new TrevniRuntimeException
+        ("Column does not have value index: " +column.metaData.getName());
+
+    if (previous == null
+        || previous.compareTo(v) > 0
+        || (block != column.blockCount()-1
+            && column.firstValues[block+1].compareTo(v) <= 0))
+      startBlock(column.findBlock(v));            // seek to block start
+    while (hasNext()) {
+      long savedPosition = values.tell();
+      T savedPrevious = previous;
+      if (next().compareTo(v) <= 0) {
+        values.seek(savedPosition);
+        previous = savedPrevious;
+        row--;
+        return;
+      }
     }
   }
 
@@ -85,7 +112,7 @@ public class ColumnValues<T> implements Iterator<T>, Iterable<T> {
         startBlock(block+1);
       }
       row++;
-      return (T)values.readValue(type);
+      return previous = (T)values.readValue(type);
     } catch (IOException e) {
       throw new TrevniRuntimeException(e);
     }

@@ -104,7 +104,7 @@ public class TestIOBuffers {
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     random = TestUtil.createRandom();
     for (int i = 0; i < COUNT; i++)
-      Assert.assertArrayEquals(TestUtil.randomBytes(random), in.readBytes());
+      Assert.assertEquals(TestUtil.randomBytes(random), in.readBytes(null));
   }
 
   @Test public void testString() throws Exception {

@@ -21,7 +21,7 @@ import java.io.IOException;
 
 import java.util.Arrays;
 
-class ColumnDescriptor {
+class ColumnDescriptor<T extends Comparable> {
   final Input file;
   final ColumnMetaData metaData;
 
@@ -30,9 +30,9 @@ class ColumnDescriptor {
 
   BlockDescriptor[] blocks;
 
-  long[] firstRows;                               // for binary searches
   long[] blockStarts;                             // for random access
-  Object[] values;                                // for random access
+  long[] firstRows;                               // for binary searches
+  T[] firstValues;                                // for binary searches
 
   public ColumnDescriptor(Input file, ColumnMetaData metaData) {
     this.file = file;
@@ -41,6 +41,13 @@ class ColumnDescriptor {
 
   public int findBlock(long row) {
     int block = Arrays.binarySearch(firstRows, row);
+    if (block < 0)
+      block = -block - 2;
+    return block;
+  }
+
+  public int findBlock(T value) {
+    int block = Arrays.binarySearch(firstValues, value);
     if (block < 0)
       block = -block - 2;
     return block;
@@ -61,12 +68,12 @@ class ColumnDescriptor {
     int blockCount = in.readFixed32();
     BlockDescriptor[] blocks = new BlockDescriptor[blockCount];
     if (metaData.getValues())
-      values = new Object[blockCount];
+      firstValues = (T[])new Object[blockCount];
 
     for (int i = 0; i < blockCount; i++) {
       blocks[i] = BlockDescriptor.read(in);
       if (metaData.getValues())
-        values[i] = in.readValue(metaData.getType());
+        firstValues[i] = in.readValue(metaData.getType());
     }
     dataStart = in.tell();
     

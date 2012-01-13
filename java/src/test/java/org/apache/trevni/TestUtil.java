@@ -20,6 +20,7 @@ package org.apache.trevni;
 import java.util.Random;
 
 import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -50,10 +51,10 @@ public class TestUtil {
     return new Random(getRandomSeed());
   }
 
-  public static byte[] randomBytes(Random random) {
+  public static ByteBuffer randomBytes(Random random) {
     byte[] bytes = new byte[randomLength(random)];
     random.nextBytes(bytes);
-    return bytes;
+    return ByteBuffer.wrap(bytes);
   }
 
   public static String randomString(Random random) {

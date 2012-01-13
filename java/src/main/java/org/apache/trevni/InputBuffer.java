@@ -63,24 +63,24 @@ class InputBuffer {
 
   public long length() { return inLength; }
 
-  public Object readValue(ValueType type) throws IOException {
+  public <T extends Comparable> T readValue(ValueType type) throws IOException {
     switch (type) {
     case INT:
-      return readInt();
+      return (T)Integer.valueOf(readInt());
     case LONG:
-      return readLong();
+      return (T)Long.valueOf(readLong());
     case FIXED32:
-      return readFixed32();
+      return (T)Integer.valueOf(readFixed32());
     case FIXED64:
-      return readFixed64();
+      return (T)Long.valueOf(readFixed64());
     case FLOAT:
-      return readFloat();
+      return (T)Float.valueOf(readFloat());
     case DOUBLE:
-      return readDouble();
+      return (T)Double.valueOf(readDouble());
     case STRING:
-      return readString();
+      return (T)readString();
     case BYTES:
-      return readBytes();
+      return (T)readBytes(null);
     default:
       throw new TrevniRuntimeException("Unknown value type: "+type);
     }
