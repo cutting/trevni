@@ -1,6 +1,5 @@
 Complete implementation of specification:
 - implement deflate compression
-- implement checksum
 - implement index values
 
 Features:

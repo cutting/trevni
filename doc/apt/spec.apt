@@ -215,8 +215,8 @@ whether subsequent bytes are present.  For example:
 
   * <<cf.checksum>> the name of the checksum algorithm used in this
     file, as a <string>.  Implementations are required to support the
-    "crc-32c” checksum.  Optional.  If absent, it is assumed to be
-    "crc-32c".  Checksums are described in more detail below.
+    "crc-32” checksum.  Optional.  If absent, it is assumed to be
+    "null".  Checksums are described in more detail below.
 
   []
 
@@ -312,8 +312,8 @@ whether subsequent bytes are present.  For example:
 
   [null] The "null" checksum contains zero bytes.
 
-  [crc-32c] Each "crc-32c" checksum contains the four bytes of an ISO
-  3309 CRC-32C checksum of the uncompressed block data as a fixed32.
+  [crc-32] Each "crc-32" checksum contains the four bytes of an ISO
+  3309 CRC-32 checksum of the uncompressed block data as a fixed32.
 
 * Type Mappings
 
