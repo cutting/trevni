@@ -280,13 +280,13 @@ whether subsequent bytes are present.  For example:
   * A <fixed32> indicating the number of rows in the block
 
   * A <fixed32> indicating the size in bytes of the block before the
-    codec is applied.
+    codec is applied (excluding checksum).
 
   * A <fixed32> indicating the size in bytes of the block after the
-    codec is applied.
+    codec is applied (excluding checksum).
 
   * If this column’s metadata declares it to include values, the first
-    value in the column, as <bytes>.
+    value in the column, serialized according to this column's type.
 
   []
 

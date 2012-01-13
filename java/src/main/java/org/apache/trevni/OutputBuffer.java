@@ -191,4 +191,107 @@ class OutputBuffer extends ByteArrayOutputStream {
       buf = Arrays.copyOf(buf, Math.max(buf.length << 1, count + n));
   }
 
+  public static int size(Object value, ValueType type) {
+    switch (type) {
+    case INT:
+      return size((Integer)value);
+    case LONG:
+      return size((Long)value);
+    case FIXED32:
+    case FLOAT:
+      return 4;
+    case FIXED64:
+    case DOUBLE:
+      return 8;
+    case STRING:
+      return size((String)value);
+    case BYTES:
+      if (value instanceof ByteBuffer)
+        return size((ByteBuffer)value);
+      return size((byte[])value);
+    default:
+      throw new TrevniRuntimeException("Unknown value type: "+type);
+    }
+  }
+
+  public static int size(int n) {
+    n = (n << 1) ^ (n >> 31);                     // move sign to low-order bit
+    if (n <= (1<<7*1)-1)
+      return 1;
+    if (n <= (1<<7*2)-1)
+      return 2;
+    if (n <= (1<<7*3)-1)
+      return 3;
+    if (n <= (1<<7*4)-1)
+      return 4;
+    return 5;
+  }
+
+  public static int size(long n) {
+    n = (n << 1) ^ (n >> 63);                     // move sign to low-order bit
+    if (n <= (1<<7*1)-1)
+      return 1;
+    if (n <= (1<<7*2)-1)
+      return 2;
+    if (n <= (1<<7*3)-1)
+      return 3;
+    if (n <= (1<<7*4)-1)
+      return 4;
+    if (n <= (1<<7*5)-1)
+      return 5;
+    if (n <= (1<<7*6)-1)
+      return 6;
+    if (n <= (1<<7*7)-1)
+      return 7;
+    if (n <= (1<<7*8)-1)
+      return 8;
+    if (n <= (1<<7*9)-1)
+      return 9;
+    return 10;
+  }
+
+  public static int size(ByteBuffer bytes) {
+    int length = bytes.remaining();
+    return size(length) + length;
+  }
+
+  public static int size(byte[] bytes) {
+    int length = bytes.length;
+    return size(length) + length;
+  }
+
+  public static int size(String string) {
+    int length = utf8Length(string);
+    return size(length) + length;
+  }
+
+  private static int utf8Length(String string) {
+    int stringLength = string.length();
+    int utf8Length = 0;
+    for (int i = 0; i < stringLength; i++) {
+      char c = string.charAt(i);
+      int p = c;                                  // code point
+      if (Character.isHighSurrogate(c)            // surrogate pair
+          && i != stringLength-1
+          && Character.isLowSurrogate(string.charAt(i+1))) {
+        p = string.codePointAt(i);
+        i++;
+      }
+      if (p <= 0x007F) {
+        utf8Length += 1;
+      } else if (p <= 0x07FF) {
+        utf8Length += 2;
+      } else if (p <= 0x0FFFF) {
+        utf8Length += 3;
+      } else if (p <= 0x01FFFFF) {
+        utf8Length += 4;
+      } else if (p <= 0x03FFFFFF) {
+        utf8Length += 5;
+      } else {
+        utf8Length += 6;
+      }
+    }
+    return utf8Length;
+  }
+
 }

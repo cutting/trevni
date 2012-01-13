@@ -32,6 +32,7 @@ class ColumnDescriptor {
 
   long[] firstRows;                               // for binary searches
   long[] blockStarts;                             // for random access
+  Object[] values;                                // for random access
 
   public ColumnDescriptor(Input file, ColumnMetaData metaData) {
     this.file = file;
@@ -59,8 +60,14 @@ class ColumnDescriptor {
     InputBuffer in = new InputBuffer(file, start);
     int blockCount = in.readFixed32();
     BlockDescriptor[] blocks = new BlockDescriptor[blockCount];
-    for (int i = 0; i < blockCount; i++)
+    if (metaData.getValues())
+      values = new Object[blockCount];
+
+    for (int i = 0; i < blockCount; i++) {
       blocks[i] = BlockDescriptor.read(in);
+      if (metaData.getValues())
+        values[i] = in.readValue(metaData.getType());
+    }
     dataStart = in.tell();
     
     // compute blockStarts and firstRows

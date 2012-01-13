@@ -30,6 +30,7 @@ class ColumnOutputBuffer {
   private OutputBuffer buffer;
   private List<BlockDescriptor> blockDescriptors;
   private List<byte[]> blockData;
+  private List<byte[]> firstValues;
 
   public ColumnOutputBuffer(ColumnMetaData meta) throws IOException {
     this.meta = meta;
@@ -38,6 +39,8 @@ class ColumnOutputBuffer {
     this.buffer = new OutputBuffer();
     this.blockDescriptors = new ArrayList<BlockDescriptor>();
     this.blockData = new ArrayList<byte[]>();
+    if (meta.getValues())
+      this.firstValues = new ArrayList<byte[]>();
   }
 
   public ColumnMetaData getMeta() { return meta; }
@@ -46,9 +49,11 @@ class ColumnOutputBuffer {
     if (buffer.isFull())
       flushBuffer();
     buffer.writeValue(value, meta.getType());
+    if (meta.getValues() && buffer.getRowCount() == 1)
+      firstValues.add(buffer.toByteArray());
   }
 
-  public void flushBuffer() throws IOException {
+  private void flushBuffer() throws IOException {
     if (buffer.getRowCount() == 0) return;
     ByteBuffer raw = buffer.asByteBuffer();
     ByteBuffer c = codec.compress(raw);
@@ -69,6 +74,11 @@ class ColumnOutputBuffer {
     flushBuffer();
     long size = 4;                                // count of blocks
     size += 4 * 3 * blockDescriptors.size();      // descriptors
+
+    if (meta.getValues())                         // first values
+      for (byte[] value : firstValues)
+        size += value.length;
+
     for (byte[] data : blockData)
       size += data.length;                        // data
     return size;
@@ -77,8 +87,11 @@ class ColumnOutputBuffer {
   public void writeTo(OutputStream out) throws IOException {
     OutputBuffer header = new OutputBuffer();
     header.writeFixed32(blockDescriptors.size());
-    for (BlockDescriptor descriptor: blockDescriptors)
-      descriptor.writeTo(header);
+    for (int i = 0; i < blockDescriptors.size(); i++) {
+      blockDescriptors.get(i).writeTo(header);
+      if (meta.getValues())
+        header.write(firstValues.get(i));
+    }
     header.writeTo(out);
 
     for (byte[] data : blockData)

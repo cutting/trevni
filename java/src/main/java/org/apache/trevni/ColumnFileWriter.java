@@ -47,6 +47,9 @@ public class ColumnFileWriter {
     }
   }
 
+  /** Return this file's metadata. */
+  public ColumnFileMetaData getMetaData() { return metaData; }
+
   /** Add a row to the file. */
   public void writeRow(Object... row) throws IOException {
     for (int column = 0; column < columnCount; column++)
