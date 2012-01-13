@@ -252,8 +252,6 @@ public class TestColumnFile {
     }
     out.writeTo(FILE);
 
-    System.out.println("file length = "+FILE.length());
-
     ColumnFileReader in = new ColumnFileReader(FILE);
     ColumnValues<String> v = in.getValues("test");
 
