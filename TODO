@@ -1,10 +1,3 @@
-Complete implementation of specification:
-- implement deflate compression
-- implement index values
-
-Features:
-- implement random access by value
-
 Improvements/Optimizations:
 - implement iterator subclasses per type to avoid boxing & dispatch?
 - change writer api to addRowValue(int column, T) to avoid allocations?

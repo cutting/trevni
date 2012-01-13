@@ -27,6 +27,8 @@ abstract class Codec {
     String name = meta.getCodec();
     if (name == null || "null".equals(name))
       return new NullCodec();
+    else if ("deflate".equals(name))
+      return new DeflateCodec();
     else if ("snappy".equals(name))
       return new SnappyCodec();
     else

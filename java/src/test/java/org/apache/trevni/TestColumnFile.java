@@ -38,7 +38,7 @@ import org.junit.runners.Parameterized.Parameters;
 public class TestColumnFile {
 
   private static final File FILE = new File("target", "test.trv");
-  private static final int COUNT = 1024*128;
+  private static final int COUNT = 1024*64;
 
   private String codec;
   private String checksum;
@@ -50,7 +50,8 @@ public class TestColumnFile {
 
   @Parameters public static Collection<Object[]> codecs() {
     Object[][] data = new Object[][] {{"null", "null"},
-                                      {"snappy", "crc32"}};
+                                      {"snappy", "crc32"},
+                                      {"deflate", "crc32"}};
     return Arrays.asList(data);
   }
 
