@@ -68,7 +68,7 @@ class ColumnDescriptor<T extends Comparable> {
     int blockCount = in.readFixed32();
     BlockDescriptor[] blocks = new BlockDescriptor[blockCount];
     if (metaData.getValues())
-      firstValues = (T[])new Object[blockCount];
+      firstValues = (T[])new Comparable[blockCount];
 
     for (int i = 0; i < blockCount; i++) {
       blocks[i] = BlockDescriptor.read(in);

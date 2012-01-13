@@ -191,32 +191,75 @@ public class TestColumnFile {
                            new ColumnMetaData("test", ValueType.LONG));
     Random random = TestUtil.createRandom();
 
-    int[] testRows = new int[COUNT/1024];
-    Map<Integer,Integer> testRowMap
-      = new HashMap<Integer,Integer>(testRows.length);
-    while (testRowMap.size() < testRows.length) {
+    int seekCount = COUNT/1024;
+    int[] seekRows = new int[seekCount];
+    Map<Integer,Integer> seekRowMap = new HashMap<Integer,Integer>(seekCount);
+    while (seekRowMap.size() < seekCount) {
       int row = random.nextInt(COUNT);
-      if (!testRowMap.containsKey(row)) {
-        testRows[testRowMap.size()] = row;
-        testRowMap.put(row, testRowMap.size());
+      if (!seekRowMap.containsKey(row)) {
+        seekRows[seekRowMap.size()] = row;
+        seekRowMap.put(row, seekRowMap.size());
       }
     }
 
-    long[] testValues = new long[1024];
+    Long[] seekValues = new Long[seekCount];
     for (int i = 0; i < COUNT; i++) {
       long l = random.nextLong();
       out.writeRow(l);
-      if (testRowMap.containsKey(i))
-        testValues[testRowMap.get(i)] = l;
+      if (seekRowMap.containsKey(i))
+        seekValues[seekRowMap.get(i)] = l;
     }
     out.writeTo(FILE);
 
     ColumnFileReader in = new ColumnFileReader(FILE);
     ColumnValues<Long> v = in.getValues("test");
 
-    for (int i = 0; i < testRows.length; i++) {
-      v.seek(testRows[i]);
-      Assert.assertEquals(testValues[i], (long)v.next());
+    for (int i = 0; i < seekCount; i++) {
+      v.seek(seekRows[i]);
+      Assert.assertEquals(seekValues[i], v.next());
+    }
+
+  }
+
+  @Test public void testSeekStrings() throws Exception {
+    FILE.delete();
+
+    ColumnFileWriter out =
+      new ColumnFileWriter(createFileMeta(),
+                           new ColumnMetaData("test", ValueType.STRING)
+                           .setValues(true));
+
+    Random random = TestUtil.createRandom();
+
+    int seekCount = COUNT/1024;
+    Map<Integer,Integer> seekRowMap = new HashMap<Integer,Integer>(seekCount);
+    while (seekRowMap.size() < seekCount) {
+      int row = random.nextInt(COUNT);
+      if (!seekRowMap.containsKey(row))
+        seekRowMap.put(row, seekRowMap.size());
+    }
+
+    String[] values = new String[COUNT];
+    for (int i = 0; i < COUNT; i++)
+      values[i] = TestUtil.randomString(random);
+    Arrays.sort(values);
+
+    String[] seekValues = new String[seekCount];
+    for (int i = 0; i < COUNT; i++) {
+      out.writeRow(values[i]);
+      if (seekRowMap.containsKey(i))
+        seekValues[seekRowMap.get(i)] = values[i];
+    }
+    out.writeTo(FILE);
+
+    System.out.println("file length = "+FILE.length());
+
+    ColumnFileReader in = new ColumnFileReader(FILE);
+    ColumnValues<String> v = in.getValues("test");
+
+    for (int i = 0; i < seekCount; i++) {
+      v.seek(seekValues[i]);
+      Assert.assertEquals(seekValues[i], v.next());
     }
 
   }

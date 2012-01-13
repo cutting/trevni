@@ -66,15 +66,16 @@ public class ColumnValues<T extends Comparable>
       throw new TrevniRuntimeException
         ("Column does not have value index: " +column.metaData.getName());
 
-    if (previous == null
+    if (previous == null                          // not in current block?
         || previous.compareTo(v) > 0
         || (block != column.blockCount()-1
             && column.firstValues[block+1].compareTo(v) <= 0))
       startBlock(column.findBlock(v));            // seek to block start
-    while (hasNext()) {
+
+    while (hasNext()) {                           // scan block
       long savedPosition = values.tell();
       T savedPrevious = previous;
-      if (next().compareTo(v) <= 0) {
+      if (next().compareTo(v) >= 0) {
         values.seek(savedPosition);
         previous = savedPrevious;
         row--;
