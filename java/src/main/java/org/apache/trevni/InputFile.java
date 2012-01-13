@@ -23,7 +23,7 @@ import java.nio.channels.FileChannel;
 import java.nio.ByteBuffer;
 import java.io.IOException;
 
-/** A {@link FileInputStream} that implements {@link Input}. */
+/** An {@link Input} for files. */
 public class InputFile implements Input {
 
   private FileChannel channel;
