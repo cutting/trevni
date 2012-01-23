@@ -113,7 +113,7 @@ public class ColumnValues<T extends Comparable>
         startBlock(block+1);
       }
       row++;
-      return previous = (T)values.readValue(type);
+      return previous = values.<T>readValue(type);
     } catch (IOException e) {
       throw new TrevniRuntimeException(e);
     }
