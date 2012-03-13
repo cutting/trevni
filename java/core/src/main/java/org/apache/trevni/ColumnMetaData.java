@@ -18,6 +18,7 @@
 package org.apache.trevni;
 
 import java.io.IOException;
+import java.util.Map;
 
 /** Metadata for a column. */
 public class ColumnMetaData extends MetaData<ColumnMetaData> {
@@ -25,11 +26,15 @@ public class ColumnMetaData extends MetaData<ColumnMetaData> {
   static final String NAME_KEY = RESERVED_KEY_PREFIX + "name";
   static final String TYPE_KEY = RESERVED_KEY_PREFIX + "type";
   static final String VALUES_KEY = RESERVED_KEY_PREFIX + "values";
+  static final String PARENT_KEY = RESERVED_KEY_PREFIX + "parent";
+  static final String ARRAY_KEY = RESERVED_KEY_PREFIX + "array";
 
   // cache these values for better performance
   private String name;
   private ValueType type;
   private boolean values;
+  private ColumnDescriptor parent;
+  private boolean isArray;
 
   private ColumnMetaData() {}                     // non-public ctor
 
@@ -53,22 +58,35 @@ public class ColumnMetaData extends MetaData<ColumnMetaData> {
    */
   public ColumnMetaData setValues(boolean values) {
     this.values = values;
-    if (values)
-      setReserved(VALUES_KEY, "");
-    else
-      remove(VALUES_KEY);
-    return this;
+    return setReservedBoolean(VALUES_KEY, values);
+  }
+
+  /** Set whether this column is repeated. */
+  public ColumnMetaData setIsArray(boolean isArray) {
+    this.isArray = isArray;
+    return setReservedBoolean(ARRAY_KEY, isArray);
   }
 
   /** Get whether this column has an index of blocks by value. */
-  public boolean getValues() { return get(VALUES_KEY) != null; }
+  public boolean getValues() { return getBoolean(VALUES_KEY); }
 
-  static ColumnMetaData read(InputBuffer in) throws IOException {
+  static ColumnMetaData read(InputBuffer in, Map<String,ColumnDescriptor> names)
+    throws IOException {
     ColumnMetaData result = new ColumnMetaData();
     MetaData.read(in, result);
     result.name = result.getString(NAME_KEY);
     result.type = ValueType.forName(result.getString(TYPE_KEY));
-    result.values = result.get(VALUES_KEY) != null;
+    result.values = result.getBoolean(VALUES_KEY);
+    result.isArray = result.getBoolean(ARRAY_KEY);
+
+    String parentName = result.getString(PARENT_KEY);
+    if (parentName != null) {
+      ColumnDescriptor parent = names.get(parentName);
+      if (parent == null)
+        throw new RuntimeException("Unknown parent name: "+parentName);
+      result.parent = parent;
+    }
+
     return result;
   }
 

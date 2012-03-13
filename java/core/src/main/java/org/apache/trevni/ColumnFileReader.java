@@ -80,14 +80,11 @@ public class ColumnFileReader implements Closeable {
     this.rowCount = in.readFixed64();
     this.columnCount = in.readFixed32();
     this.metaData = ColumnFileMetaData.read(in);
+    this.columnsByName = new HashMap<String,ColumnDescriptor>(columnCount);
 
     columns = new ColumnDescriptor[columnCount];
     readColumnMetaData(in);
     readColumnStarts(in);
-
-    this.columnsByName = new HashMap<String,ColumnDescriptor>(columnCount);
-    for (ColumnDescriptor column : columns)
-      columnsByName.put(column.metaData.getName(), column);
   }
 
   private void readMagic(InputBuffer in) throws IOException {
@@ -103,9 +100,11 @@ public class ColumnFileReader implements Closeable {
 
   private void readColumnMetaData(InputBuffer in) throws IOException {
     for (int i = 0; i < columnCount; i++) {
-      ColumnMetaData meta = ColumnMetaData.read(in);
+      ColumnMetaData meta = ColumnMetaData.read(in, columnsByName);
       meta.setDefaults(this.metaData);
-      columns[i] = new ColumnDescriptor(file, meta);
+      ColumnDescriptor column = new ColumnDescriptor(file, meta);
+      columns[i] = column;
+      columnsByName.put(meta.getName(), column);
     }
   }
 

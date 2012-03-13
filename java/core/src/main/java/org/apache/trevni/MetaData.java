@@ -69,6 +69,11 @@ public class MetaData<T extends MetaData> extends LinkedHashMap<String,byte[]> {
     return Long.parseLong(getString(key));
   }
 
+  /** Return true iff a key has any value, false if it is not present. */
+  public boolean getBoolean(String key) {
+    return get(key) != null;
+  }
+
   /** Set a metadata property to a binary value. */
   public T set(String key, byte[] value) {
     if (isReserved(key)) {
@@ -88,8 +93,17 @@ public class MetaData<T extends MetaData> extends LinkedHashMap<String,byte[]> {
     return set(key, value.getBytes(UTF8));
   }
 
-  void setReserved(String key, String value) {
+  T setReserved(String key, String value) {
     put(key, value.getBytes(UTF8));
+    return (T)this;
+  }
+
+  T setReservedBoolean(String key, boolean value) {
+    if (value)
+      setReserved(key, "");
+    else
+      remove(key);
+    return (T)this;
   }
 
   /** Set a metadata property to a long value. */
