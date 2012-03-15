@@ -65,6 +65,8 @@ class InputBuffer {
 
   public <T extends Comparable> T readValue(ValueType type) throws IOException {
     switch (type) {
+    case NULL:
+      return (T)null;
     case INT:
       return (T)Integer.valueOf(readInt());
     case LONG:
@@ -88,6 +90,8 @@ class InputBuffer {
 
   public void skipValue(ValueType type) throws IOException {
     switch (type) {
+    case NULL:
+                    break;
     case INT:
       readInt();    break;
     case LONG:

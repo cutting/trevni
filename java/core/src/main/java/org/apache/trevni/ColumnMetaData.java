@@ -18,7 +18,6 @@
 package org.apache.trevni;
 
 import java.io.IOException;
-import java.util.Map;
 
 /** Metadata for a column. */
 public class ColumnMetaData extends MetaData<ColumnMetaData> {
@@ -33,7 +32,7 @@ public class ColumnMetaData extends MetaData<ColumnMetaData> {
   private String name;
   private ValueType type;
   private boolean values;
-  private ColumnDescriptor parent;
+  private ColumnMetaData parent;
   private boolean isArray;
 
   private ColumnMetaData() {}                     // non-public ctor
@@ -52,6 +51,12 @@ public class ColumnMetaData extends MetaData<ColumnMetaData> {
   /** Return this column's type. */
   public ValueType getType() { return type; }
 
+  /** Return this column's parent or null. */
+  public ColumnMetaData getParent() { return parent; }
+
+  /** Return true if this column is an array. */
+  public boolean isArray() { return isArray; }
+
   /** Set whether this column has an index of blocks by value.
    * This only makes sense for sorted columns and permits one to seek into a
    * column by value.
@@ -61,7 +66,15 @@ public class ColumnMetaData extends MetaData<ColumnMetaData> {
     return setReservedBoolean(VALUES_KEY, values);
   }
 
-  /** Set whether this column is repeated. */
+  /** Set this column's parent.  A parent must be a preceding array column. */
+  public ColumnMetaData setParent(ColumnMetaData parent) {
+    if (!parent.isArray())
+      throw new RuntimeException("Parent is not an array: "+parent);
+    this.parent = parent;
+    return setReserved(PARENT_KEY, parent.getName());
+  }
+
+  /** Set whether this column is an array. */
   public ColumnMetaData setIsArray(boolean isArray) {
     this.isArray = isArray;
     return setReservedBoolean(ARRAY_KEY, isArray);
@@ -70,7 +83,7 @@ public class ColumnMetaData extends MetaData<ColumnMetaData> {
   /** Get whether this column has an index of blocks by value. */
   public boolean getValues() { return getBoolean(VALUES_KEY); }
 
-  static ColumnMetaData read(InputBuffer in, Map<String,ColumnDescriptor> names)
+  static ColumnMetaData read(InputBuffer in, ColumnFileReader file)
     throws IOException {
     ColumnMetaData result = new ColumnMetaData();
     MetaData.read(in, result);
@@ -80,12 +93,8 @@ public class ColumnMetaData extends MetaData<ColumnMetaData> {
     result.isArray = result.getBoolean(ARRAY_KEY);
 
     String parentName = result.getString(PARENT_KEY);
-    if (parentName != null) {
-      ColumnDescriptor parent = names.get(parentName);
-      if (parent == null)
-        throw new RuntimeException("Unknown parent name: "+parentName);
-      result.parent = parent;
-    }
+    if (parentName != null)
+      result.parent = file.getColumnMetaData(parentName);
 
     return result;
   }

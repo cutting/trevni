@@ -20,6 +20,9 @@ package org.apache.trevni.avro;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
+import java.util.IdentityHashMap;
 
 import org.apache.trevni.ColumnMetaData;
 import org.apache.trevni.ColumnFileWriter;
@@ -47,15 +50,22 @@ public class AvroShredder {
     return columns.toArray(new ColumnMetaData[columns.size()]);
   }
 
+  private Map<Schema,Schema> seen = new IdentityHashMap<Schema,Schema>();
+
   private void columnize(String name, Schema s,
                          ColumnMetaData parent, boolean isArray) {
     if (isSimple(s)) {
       addColumn(name, simpleValueType(s), parent, isArray);
       return;
     }
+
+    if (seen.containsKey(s))                      // catch recursion
+      throw new RuntimeException("Cannot shred recursive schemas: "+s);
+    seen.put(s, s);
+    
     switch (s.getType()) {
     case MAP: 
-      throw new RuntimeException("Unknown schema: "+s);
+      throw new RuntimeException("Can't shred maps yet: "+s);
     case RECORD:
       for (Field field : s.getFields())           // flatten fields to columns
         columnize(name+"#"+field.name(), field.schema(), parent, isArray);
@@ -77,11 +87,12 @@ public class AvroShredder {
     String path = parent == null ? name : parent.getName()+"#"+name;
     ColumnMetaData column = new ColumnMetaData(path, type);
     if (parent != null)
-      column.setParent(parent.getName());
+      column.setParent(parent);
     column.setIsArray(isArray);
     columns.add(column);
     arrayWidths.add(isArray ? 1 : -1);
-  }
+    return column;
+ }
 
   private void addArrayColumn(String name, Schema element,
                               ColumnMetaData parent) {
@@ -141,20 +152,23 @@ public class AvroShredder {
       throw new RuntimeException("Unknown schema: "+s);
     case RECORD: 
       for (Field f : s.getFields())
-        column = shred(data.getField(o, f.name(), f.pos()), f.schema(), column);
+        column = shred(data.getField(o, f.name(), f.pos()), f.schema(),
+                       column, writer);
       return column;
     case ARRAY: 
-      writer.writeLength(o.length(), column);
+      Collection elements = (Collection)o;
+      writer.writeLength(elements.size(), column);
       if (isSimple(s)) {                          // optimize simple arrays
-        for (Object element : o.elements())
+        for (Object element : elements)
           writer.writeValue(element, column);
         return column+1;
       }
-      for (Object element : o.elements()) {
+      for (Object element : elements) {
         writer.writeValue(null, column);
-        shred(o, s.getElementType(), column+1, writer);
+        int c = shred(element, s.getElementType(), column+1, writer);
+        assert(c == column+arrayWidths.get(column));
       }
-      return column+columnWidths[column];
+      return column+arrayWidths.get(column);
     case UNION:
       int b = data.resolveUnion(s, o);
       int i = 0;

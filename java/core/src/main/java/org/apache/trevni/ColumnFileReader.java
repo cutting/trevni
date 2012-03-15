@@ -100,7 +100,7 @@ public class ColumnFileReader implements Closeable {
 
   private void readColumnMetaData(InputBuffer in) throws IOException {
     for (int i = 0; i < columnCount; i++) {
-      ColumnMetaData meta = ColumnMetaData.read(in, columnsByName);
+      ColumnMetaData meta = ColumnMetaData.read(in, this);
       meta.setDefaults(this.metaData);
       ColumnDescriptor column = new ColumnDescriptor(file, meta);
       columns[i] = column;

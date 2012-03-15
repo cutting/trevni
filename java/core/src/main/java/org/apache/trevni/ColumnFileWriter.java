@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.util.Set;
+import java.util.HashSet;
 
 /** Writes data to a column file.
  * All data is buffered until {@link #writeTo(File)} is called.
@@ -38,6 +40,7 @@ public class ColumnFileWriter {
   /** Construct given metadata for each column in the file. */
   public ColumnFileWriter(ColumnFileMetaData fileMeta,
                           ColumnMetaData... columnMeta) throws IOException {
+    checkColumns(columnMeta);
     this.metaData = fileMeta;
     this.columnCount = columnMeta.length;
     this.columns = new ColumnOutputBuffer[columnCount];
@@ -45,6 +48,20 @@ public class ColumnFileWriter {
       columnMeta[i].setDefaults(metaData);
       columns[i] = new ColumnOutputBuffer(columnMeta[i]);
     }
+  }
+
+  private void checkColumns(ColumnMetaData[] columnMeta) {
+    Set<String> seen = new HashSet<String>();
+    for (int i = 0; i < columnMeta.length; i++) {
+      ColumnMetaData c = columnMeta[i];
+      String name = c.getName();
+      if (seen.contains(name))
+        throw new RuntimeException("Duplicate column name: "+name);
+      ColumnMetaData parent = c.getParent();
+      if (parent != null && !seen.contains(parent))
+        throw new RuntimeException("Parent must precede child: "+name);
+      seen.add(name);
+    }          
   }
 
   /** Return this file's metadata. */

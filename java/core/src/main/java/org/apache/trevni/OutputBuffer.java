@@ -40,6 +40,8 @@ class OutputBuffer extends ByteArrayOutputStream {
   public void writeValue(Object value, ValueType type)
     throws IOException {
     switch (type) {
+    case NULL:
+                                              break;
     case INT:
       writeInt((Integer)value);               break;
     case LONG:
@@ -193,6 +195,8 @@ class OutputBuffer extends ByteArrayOutputStream {
 
   public static int size(Object value, ValueType type) {
     switch (type) {
+    case NULL:
+      return 0;
     case INT:
       return size((Integer)value);
     case LONG:
