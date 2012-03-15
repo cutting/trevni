@@ -124,4 +124,22 @@ public class MetaData<T extends MetaData> extends LinkedHashMap<String,byte[]> {
     for (int i = 0; i < size; i++)
       metaData.put(in.readString(), in.readBytes());
   }
+
+  @Override public String toString() {
+    StringBuffer buffer = new StringBuffer();
+    buffer.append("{ ");
+    for (Map.Entry<String,byte[]> e : entrySet()) {
+      buffer.append(e.getKey());
+      buffer.append("=");
+      try {
+        buffer.append(new String(e.getValue(), "ISO-8859-1"));
+      } catch (java.io.UnsupportedEncodingException error) {
+        throw new RuntimeException(error);
+      }
+      buffer.append(" ");
+    }
+    buffer.append("}");
+    return buffer.toString();
+  }
+
 }

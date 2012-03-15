@@ -79,7 +79,7 @@ public class ColumnMetaData extends MetaData<ColumnMetaData> {
   }
 
   /** Set whether this column is an array. */
-  public ColumnMetaData setIsArray(boolean isArray) {
+  public ColumnMetaData isArray(boolean isArray) {
     if (values)
       throw new RuntimeException("Array column cannot have index: "+this);
     this.isArray = isArray;

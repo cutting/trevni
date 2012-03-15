@@ -46,7 +46,7 @@ public class AvroShredder {
     columnize(schema.getFullName(), schema, null, false);
   }
 
-  public ColumnMetaData[] getColumns(Schema s) {
+  public ColumnMetaData[] getColumns() {
     return columns.toArray(new ColumnMetaData[columns.size()]);
   }
 
@@ -68,7 +68,7 @@ public class AvroShredder {
       throw new RuntimeException("Can't shred maps yet: "+s);
     case RECORD:
       for (Field field : s.getFields())           // flatten fields to columns
-        columnize(name+"#"+field.name(), field.schema(), parent, isArray);
+        columnize(field.name(), field.schema(), parent, isArray);
       break;
     case ARRAY: 
       addArrayColumn(name, s.getElementType(), parent);
@@ -88,7 +88,7 @@ public class AvroShredder {
     ColumnMetaData column = new ColumnMetaData(path, type);
     if (parent != null)
       column.setParent(parent);
-    column.setIsArray(isArray);
+    column.isArray(isArray);
     columns.add(column);
     arrayWidths.add(isArray ? 1 : -1);
     return column;
