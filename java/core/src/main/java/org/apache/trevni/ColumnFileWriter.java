@@ -57,6 +57,10 @@ public class ColumnFileWriter {
     rowCount++;
   }
 
+  public void writeValue(Object value, int column) throws IOException {}
+  public void writeLength(int length, int column) throws IOException {}
+
+
   /** Write all rows added to the named file. */
   public void writeTo(File file) throws IOException {
     OutputStream out = new FileOutputStream(file);
