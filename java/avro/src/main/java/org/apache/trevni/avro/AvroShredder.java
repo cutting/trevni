@@ -137,8 +137,10 @@ public class AvroShredder {
   }
 
   public void shred(Object value, ColumnFileWriter writer) throws IOException {
+    writer.startRow();
     int count = shred(value, schema, 0, writer);
     assert(count == columns.size());
+    writer.endRow();
   }
   
   private int shred(Object o, Schema s, int column,

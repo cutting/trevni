@@ -228,7 +228,7 @@ public class TestColumnFile {
     ColumnFileWriter out =
       new ColumnFileWriter(createFileMeta(),
                            new ColumnMetaData("test", ValueType.STRING)
-                           .setValues(true));
+                           .hasIndexValues(true));
 
     Random random = TestUtil.createRandom();
 

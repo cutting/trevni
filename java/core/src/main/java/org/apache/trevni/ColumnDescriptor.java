@@ -67,12 +67,12 @@ class ColumnDescriptor<T extends Comparable> {
     InputBuffer in = new InputBuffer(file, start);
     int blockCount = in.readFixed32();
     BlockDescriptor[] blocks = new BlockDescriptor[blockCount];
-    if (metaData.getValues())
+    if (metaData.hasIndexValues())
       firstValues = (T[])new Comparable[blockCount];
 
     for (int i = 0; i < blockCount; i++) {
       blocks[i] = BlockDescriptor.read(in);
-      if (metaData.getValues())
+      if (metaData.hasIndexValues())
         firstValues[i] = in.<T>readValue(metaData.getType());
     }
     dataStart = in.tell();

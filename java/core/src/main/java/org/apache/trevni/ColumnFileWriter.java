@@ -29,7 +29,8 @@ import java.util.HashSet;
  */
 public class ColumnFileWriter {
 
-  static final byte[] MAGIC = new byte[] {'T', 'r', 'v', 0};
+  static final byte[] MAGIC_0 = new byte[] {'T', 'r', 'v', 0};
+  static final byte[] MAGIC = new byte[] {'T', 'r', 'v', 1};
 
   private ColumnFileMetaData metaData;
   private ColumnOutputBuffer[] columns;
@@ -45,8 +46,11 @@ public class ColumnFileWriter {
     this.columnCount = columnMeta.length;
     this.columns = new ColumnOutputBuffer[columnCount];
     for (int i = 0; i < columnCount; i++) {
-      columnMeta[i].setDefaults(metaData);
-      columns[i] = new ColumnOutputBuffer(columnMeta[i]);
+      ColumnMetaData c = columnMeta[i];
+      c.setDefaults(metaData);
+      columns[i] = c.isArray() || c.getParent()!=null
+        ? new ArrayColumnOutputBuffer(c)
+        : new ColumnOutputBuffer(c);
     }
   }
 
@@ -69,14 +73,36 @@ public class ColumnFileWriter {
 
   /** Add a row to the file. */
   public void writeRow(Object... row) throws IOException {
+    startRow();
     for (int column = 0; column < columnCount; column++)
-      columns[column].writeValue(row[column]);
-    rowCount++;
+      writeValue(row[column], column);
+    endRow();
   }
 
-  public void writeValue(Object value, int column) throws IOException {}
-  public void writeLength(int length, int column) throws IOException {}
+  /** Expert: Called before any values are written to a row. */
+  public void startRow() throws IOException {
+    for (int column = 0; column < columnCount; column++)
+      columns[column].startRow();
+  }
 
+  /** Expert: Declare a count of items to be written to an array column or a
+   * column whose parent is an array. */
+  public void writeLength(int length, int column) throws IOException {
+    columns[column].writeLength(length);
+  }
+
+  /** Expert: Add a value to a row.  For values in array columns or whose
+   * parents are array columns, this must be preceded by a call to {@link
+   * #writeLength(int, int)} and must be called that many times.   For normal
+   * columns this is called once for each row in the column. */
+  public void writeValue(Object value, int column) throws IOException {
+    columns[column].writeValue(value);
+  }
+
+  /** Expert: Called after all values are written to a row. */
+  public void endRow() throws IOException {
+    rowCount++;
+  }
 
   /** Write all rows added to the named file. */
   public void writeTo(File file) throws IOException {

@@ -61,7 +61,9 @@ public class ColumnMetaData extends MetaData<ColumnMetaData> {
    * This only makes sense for sorted columns and permits one to seek into a
    * column by value.
    */
-  public ColumnMetaData setValues(boolean values) {
+  public ColumnMetaData hasIndexValues(boolean values) {
+    if (isArray)
+      throw new RuntimeException("Array column cannot have index: "+this);
     this.values = values;
     return setReservedBoolean(VALUES_KEY, values);
   }
@@ -70,18 +72,22 @@ public class ColumnMetaData extends MetaData<ColumnMetaData> {
   public ColumnMetaData setParent(ColumnMetaData parent) {
     if (!parent.isArray())
       throw new RuntimeException("Parent is not an array: "+parent);
+    if (values)
+      throw new RuntimeException("Array column cannot have index: "+this);
     this.parent = parent;
     return setReserved(PARENT_KEY, parent.getName());
   }
 
   /** Set whether this column is an array. */
   public ColumnMetaData setIsArray(boolean isArray) {
+    if (values)
+      throw new RuntimeException("Array column cannot have index: "+this);
     this.isArray = isArray;
     return setReservedBoolean(ARRAY_KEY, isArray);
   }
 
   /** Get whether this column has an index of blocks by value. */
-  public boolean getValues() { return getBoolean(VALUES_KEY); }
+  public boolean hasIndexValues() { return getBoolean(VALUES_KEY); }
 
   static ColumnMetaData read(InputBuffer in, ColumnFileReader file)
     throws IOException {

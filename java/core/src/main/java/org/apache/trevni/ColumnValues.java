@@ -62,7 +62,7 @@ public class ColumnValues<T extends Comparable>
 
   /** Seek to the named value. */
   public void seek(T v) throws IOException {
-    if (!column.metaData.getValues())
+    if (!column.metaData.hasIndexValues())
       throw new TrevniRuntimeException
         ("Column does not have value index: " +column.metaData.getName());
 

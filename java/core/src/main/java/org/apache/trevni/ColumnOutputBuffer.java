@@ -39,17 +39,25 @@ class ColumnOutputBuffer {
     this.buffer = new OutputBuffer();
     this.blockDescriptors = new ArrayList<BlockDescriptor>();
     this.blockData = new ArrayList<byte[]>();
-    if (meta.getValues())
+    if (meta.hasIndexValues())
       this.firstValues = new ArrayList<byte[]>();
   }
 
   public ColumnMetaData getMeta() { return meta; }
+  public OutputBuffer getBuffer() { return buffer; }
 
-  public void writeValue(Object value) throws IOException {
+  public void startRow() throws IOException {
     if (buffer.isFull())
       flushBuffer();
+  }
+
+  public void writeLength(int length) throws IOException {
+    throw new RuntimeException("Not an array column: "+meta);
+  }
+
+  public void writeValue(Object value) throws IOException {
     buffer.writeValue(value, meta.getType());
-    if (meta.getValues() && buffer.getRowCount() == 1)
+    if (meta.hasIndexValues() && buffer.getRowCount() == 1)
       firstValues.add(buffer.toByteArray());
   }
 
@@ -75,7 +83,7 @@ class ColumnOutputBuffer {
     long size = 4;                                // count of blocks
     size += 4 * 3 * blockDescriptors.size();      // descriptors
 
-    if (meta.getValues())                         // first values
+    if (meta.hasIndexValues())                    // first values
       for (byte[] value : firstValues)
         size += value.length;
 
@@ -89,7 +97,7 @@ class ColumnOutputBuffer {
     header.writeFixed32(blockDescriptors.size());
     for (int i = 0; i < blockDescriptors.size(); i++) {
       blockDescriptors.get(i).writeTo(header);
-      if (meta.getValues())
+      if (meta.hasIndexValues())
         header.write(firstValues.get(i));
     }
     header.writeTo(out);
