@@ -88,9 +88,9 @@ public class AvroShredder {
     return parent == null ? child : parent + "#" + child;
   }
 
-  private ColumnMetaData addColumn(String name, ValueType type,
+  private ColumnMetaData addColumn(String path, ValueType type,
                                    ColumnMetaData parent, boolean isArray) {
-    ColumnMetaData column = new ColumnMetaData(name, type);
+    ColumnMetaData column = new ColumnMetaData(path, type);
     if (parent != null)
       column.setParent(parent);
     column.isArray(isArray);
@@ -99,16 +99,17 @@ public class AvroShredder {
     return column;
  }
 
-  private void addArrayColumn(String name, Schema element,
+  private void addArrayColumn(String path, Schema element,
                               ColumnMetaData parent) {
+    if (path == null) path = element.getFullName();
     if (isSimple(element)) {                      // optimize simple arrays
-      addColumn(name, simpleValueType(element), parent, true);
+      addColumn(path, simpleValueType(element), parent, true);
       return;
     }
     // complex array: insert a parent column with lengths
     int start = columns.size();
-    ColumnMetaData array = addColumn(name, ValueType.NULL, parent, true);
-    columnize(name, element, array, false); 
+    ColumnMetaData array = addColumn(path, ValueType.NULL, parent, true);
+    columnize(path, element, array, false); 
     arrayWidths.set(start, columns.size()-start); // fixup with actual width
   }
 

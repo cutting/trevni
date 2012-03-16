@@ -34,7 +34,7 @@ public class TestShredder {
   }
 
   private static final String SIMPLE_RECORD =
-    "{\"type\":\"record\",\"name\":\"Foo\",\"fields\":["
+    "{\"type\":\"record\",\"name\":\"R\",\"fields\":["
     +"{\"name\":\"x\",\"type\":\"int\"},"
     +"{\"name\":\"y\",\"type\":\"string\"}"
     +"]}";
@@ -47,16 +47,33 @@ public class TestShredder {
 
   @Test public void testNestedRecordColumns() throws Exception {
     String s = 
-      "{\"type\":\"record\",\"name\":\"Bar\",\"fields\":["
+      "{\"type\":\"record\",\"name\":\"S\",\"fields\":["
       +"{\"name\":\"x\",\"type\":\"int\"},"
-      +"{\"name\":\"foo\",\"type\":"+SIMPLE_RECORD+"},"
+      +"{\"name\":\"R\",\"type\":"+SIMPLE_RECORD+"},"
       +"{\"name\":\"y\",\"type\":\"string\"}"
       +"]}";
     checkColumns(Schema.parse(s),
                  new ColumnMetaData("x", ValueType.INT),
-                 new ColumnMetaData("foo#x", ValueType.INT),
-                 new ColumnMetaData("foo#y", ValueType.STRING),
+                 new ColumnMetaData("R#x", ValueType.INT),
+                 new ColumnMetaData("R#y", ValueType.STRING),
                  new ColumnMetaData("y", ValueType.STRING));
+  }
+
+  @Test public void testSimpleArrayColumns() throws Exception {
+    String s = "{\"type\":\"array\",\"items\":\"long\"}";
+    checkColumns(Schema.parse(s),
+                 new ColumnMetaData("long", ValueType.LONG).isArray(true));
+  }
+
+  private static final String RECORD_ARRAY = 
+    "{\"type\":\"array\",\"items\":"+SIMPLE_RECORD+"}";
+
+  @Test public void testArrayColumns() throws Exception {
+    ColumnMetaData p = new ColumnMetaData("R", ValueType.NULL).isArray(true);
+    checkColumns(Schema.parse(RECORD_ARRAY),
+                 p,
+                 new ColumnMetaData("R#x", ValueType.INT).setParent(p),
+                 new ColumnMetaData("R#y", ValueType.STRING).setParent(p));
   }
 
   @Test public void testSimpleUnionColumns() throws Exception {
@@ -66,15 +83,48 @@ public class TestShredder {
                  new ColumnMetaData("string", ValueType.STRING).isArray(true));
   }
 
+  private static final String UNION = "[\"int\","+SIMPLE_RECORD+"]";
+
   @Test public void testUnionColumns() throws Exception {
-    String s = "[\"int\","+SIMPLE_RECORD+"]";
-    ColumnMetaData p =
-      new ColumnMetaData("Foo", ValueType.NULL).isArray(true);
-    checkColumns(Schema.parse(s),
+    ColumnMetaData p = new ColumnMetaData("R", ValueType.NULL).isArray(true);
+    checkColumns(Schema.parse(UNION),
                  new ColumnMetaData("int", ValueType.INT).isArray(true),
                  p,
-                 new ColumnMetaData("Foo#x", ValueType.INT).setParent(p),
-                 new ColumnMetaData("Foo#y", ValueType.STRING).setParent(p));
+                 new ColumnMetaData("R#x", ValueType.INT).setParent(p),
+                 new ColumnMetaData("R#y", ValueType.STRING).setParent(p));
+  }
+
+  @Test public void testNestedArrayColumns() throws Exception {
+    String s = 
+      "{\"type\":\"record\",\"name\":\"S\",\"fields\":["
+      +"{\"name\":\"x\",\"type\":\"int\"},"
+      +"{\"name\":\"R\",\"type\":"+RECORD_ARRAY+"},"
+      +"{\"name\":\"y\",\"type\":\"string\"}"
+      +"]}";
+    ColumnMetaData p = new ColumnMetaData("R", ValueType.NULL).isArray(true);
+    checkColumns(Schema.parse(s),
+                 new ColumnMetaData("x", ValueType.INT),
+                 p,
+                 new ColumnMetaData("R#x", ValueType.INT).setParent(p),
+                 new ColumnMetaData("R#y", ValueType.STRING).setParent(p),
+                 new ColumnMetaData("y", ValueType.STRING));
+  }
+
+  @Test public void testNestedUnionColumns() throws Exception {
+    String s = 
+      "{\"type\":\"record\",\"name\":\"S\",\"fields\":["
+      +"{\"name\":\"x\",\"type\":\"int\"},"
+      +"{\"name\":\"u\",\"type\":"+UNION+"},"
+      +"{\"name\":\"y\",\"type\":\"string\"}"
+      +"]}";
+    ColumnMetaData p = new ColumnMetaData("u#R", ValueType.NULL).isArray(true);
+    checkColumns(Schema.parse(s),
+                 new ColumnMetaData("x", ValueType.INT),
+                 new ColumnMetaData("u#int", ValueType.INT).isArray(true),
+                 p,
+                 new ColumnMetaData("u#R#x", ValueType.INT).setParent(p),
+                 new ColumnMetaData("u#R#y", ValueType.STRING).setParent(p),
+                 new ColumnMetaData("y", ValueType.STRING));
   }
 
   private void checkColumns(Schema s, ColumnMetaData... expected) {
