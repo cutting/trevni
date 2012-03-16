@@ -73,6 +73,8 @@ public class AvroShredder {
         columnize(p(path, field.name()), field.schema(), parent, isArray);
       break;
     case ARRAY: 
+      if (parent != null)
+        path = p(parent.getName(), s.getElementType().getFullName());
       addArrayColumn(path, s.getElementType(), parent);
       break;
     case UNION:
