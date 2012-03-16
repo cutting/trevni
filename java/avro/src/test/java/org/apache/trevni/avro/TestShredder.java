@@ -28,20 +28,34 @@ import static org.junit.Assert.*;
 
 public class TestShredder {
 
-  private static final String R1 =
-    "{\"type\":\"record\",\"name\":\"Foo\",\"fields\":["
-    +"{\"name\":\"x\",\"type\":\"int\"},"
-    +"{\"name\":\"y\",\"type\":\"string\"}"
-    +"]}";
-
   @Test public void testPrimitiveColumns() throws Exception {
     checkColumns(Schema.create(Schema.Type.INT),
                  new ColumnMetaData("int", ValueType.INT));
   }
 
+  private static final String SIMPLE_RECORD =
+    "{\"type\":\"record\",\"name\":\"Foo\",\"fields\":["
+    +"{\"name\":\"x\",\"type\":\"int\"},"
+    +"{\"name\":\"y\",\"type\":\"string\"}"
+    +"]}";
+
   @Test public void testSimpleRecordColumns() throws Exception {
-    checkColumns(Schema.parse(R1),
+    checkColumns(Schema.parse(SIMPLE_RECORD),
                  new ColumnMetaData("x", ValueType.INT),
+                 new ColumnMetaData("y", ValueType.STRING));
+  }
+
+  @Test public void testNestedRecordColumns() throws Exception {
+    String s = 
+      "{\"type\":\"record\",\"name\":\"Bar\",\"fields\":["
+      +"{\"name\":\"x\",\"type\":\"int\"},"
+      +"{\"name\":\"foo\",\"type\":"+SIMPLE_RECORD+"},"
+      +"{\"name\":\"y\",\"type\":\"string\"}"
+      +"]}";
+    checkColumns(Schema.parse(s),
+                 new ColumnMetaData("x", ValueType.INT),
+                 new ColumnMetaData("foo#x", ValueType.INT),
+                 new ColumnMetaData("foo#y", ValueType.STRING),
                  new ColumnMetaData("y", ValueType.STRING));
   }
 
@@ -53,7 +67,7 @@ public class TestShredder {
   }
 
   @Test public void testUnionColumns() throws Exception {
-    String s = "[\"int\","+R1+"]";
+    String s = "[\"int\","+SIMPLE_RECORD+"]";
     ColumnMetaData p =
       new ColumnMetaData("Foo", ValueType.NULL).isArray(true);
     checkColumns(Schema.parse(s),

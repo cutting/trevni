@@ -43,7 +43,7 @@ public class AvroShredder {
   public AvroShredder(Schema schema, GenericData data) {
     this.schema = schema;
     this.data = data;
-    columnize(schema.getFullName(), schema, null, false);
+    columnize(null, schema, null, false);
   }
 
   public ColumnMetaData[] getColumns() {
@@ -52,10 +52,12 @@ public class AvroShredder {
 
   private Map<Schema,Schema> seen = new IdentityHashMap<Schema,Schema>();
 
-  private void columnize(String name, Schema s,
+  private void columnize(String path, Schema s,
                          ColumnMetaData parent, boolean isArray) {
+
     if (isSimple(s)) {
-      addColumn(name, simpleValueType(s), parent, isArray);
+      if (path == null) path = s.getFullName();
+      addColumn(path, simpleValueType(s), parent, isArray);
       return;
     }
 
@@ -68,24 +70,27 @@ public class AvroShredder {
       throw new RuntimeException("Can't shred maps yet: "+s);
     case RECORD:
       for (Field field : s.getFields())           // flatten fields to columns
-        columnize(field.name(), field.schema(), parent, isArray);
+        columnize(p(path, field.name()), field.schema(), parent, isArray);
       break;
     case ARRAY: 
-      addArrayColumn(name, s.getElementType(), parent);
+      addArrayColumn(path, s.getElementType(), parent);
       break;
     case UNION:
       for (Schema branch : s.getTypes())          // array per branch
-        addArrayColumn(branch.getFullName(), branch, parent);
+        addArrayColumn(p(path, branch.getFullName()), branch, parent);
       break;
     default:
       throw new RuntimeException("Unknown schema: "+s);
     }
   }
 
+  private String p(String parent, String child) {
+    return parent == null ? child : parent + "#" + child;
+  }
+
   private ColumnMetaData addColumn(String name, ValueType type,
                                    ColumnMetaData parent, boolean isArray) {
-    String path = parent == null ? name : parent.getName()+"#"+name;
-    ColumnMetaData column = new ColumnMetaData(path, type);
+    ColumnMetaData column = new ColumnMetaData(name, type);
     if (parent != null)
       column.setParent(parent);
     column.isArray(isArray);
