@@ -1,3 +1,10 @@
+Arrays
+ - optimize unions of a primitive with null
+ - update specification
+ - test writing
+ - implement reading
+ - test reading
+
 Improvements/Optimizations:
 - implement iterator subclasses per type to avoid boxing & dispatch?
 - change writer api to addRowValue(int column, T) to avoid allocations?
