@@ -168,7 +168,7 @@ public class AvroShredder {
     case ARRAY: 
       Collection elements = (Collection)o;
       writer.writeLength(elements.size(), column);
-      if (isSimple(s)) {                          // optimize simple arrays
+      if (isSimple(s.getElementType())) {              // optimize simple arrays
         for (Object element : elements)
           writer.writeValue(element, column);
         return column+1;

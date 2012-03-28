@@ -62,7 +62,7 @@ public class ColumnFileWriter {
       if (seen.contains(name))
         throw new RuntimeException("Duplicate column name: "+name);
       ColumnMetaData parent = c.getParent();
-      if (parent != null && !seen.contains(parent))
+      if (parent != null && !seen.contains(parent.getName()))
         throw new RuntimeException("Parent must precede child: "+name);
       seen.add(name);
     }          
