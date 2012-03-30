@@ -109,11 +109,7 @@ public class ColumnValues<T extends Comparable>
 
   @Override public T next() {
     try {
-      if (row >= column.lastRow(block)) {
-        if (block >= column.blockCount())
-          throw new TrevniRuntimeException("Read past end of column.");
-        startBlock(block+1);
-      }
+      prepareToRead();
       arrayLength--;
       row++;
       return previous = values.<T>readValue(type);
@@ -125,7 +121,16 @@ public class ColumnValues<T extends Comparable>
   /** Expert: Returns the next length in an array column. */
   public int nextLength() throws IOException {
     assert arrayLength == 0;
+    prepareToRead();
     return arrayLength = values.readInt();
+  }
+
+  private void prepareToRead() throws IOException {
+    if (row >= column.lastRow(block)) {
+      if (block >= column.blockCount())
+        throw new TrevniRuntimeException("Read past end of column.");
+      startBlock(block+1);
+    }
   }
 
   @Override public void remove() { throw new UnsupportedOperationException(); }

@@ -17,8 +17,12 @@
  */
 package org.apache.trevni.avro;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.apache.trevni.ValueType;
 import org.apache.trevni.ColumnMetaData;
+import org.apache.trevni.ColumnFileMetaData;
 
 import org.apache.avro.Schema;
 
@@ -26,6 +30,10 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class TestShredder {
+
+  private static final int COUNT = 1;
+  private static final File FILE = new File("target", "test.trv");
+  private static final long SEED = System.currentTimeMillis();
 
   @Test public void testPrimitive() throws Exception {
     check(Schema.create(Schema.Type.INT),
@@ -162,12 +170,29 @@ public class TestShredder {
           new ColumnMetaData("a#array#R#y", ValueType.STRING).setParent(r));
   }
 
-  private void check(Schema s, ColumnMetaData... expected) {
-    ColumnMetaData[] shredded =
-      new AvroColumnator(s).getColumns();
+  private void check(Schema s, ColumnMetaData... expected) throws Exception {
+    ColumnMetaData[] shredded = new AvroColumnator(s).getColumns();
     assertEquals(expected.length, shredded.length);
     for (int i = 0; i < expected.length; i++)
       assertEquals(expected[i].toString(), shredded[i].toString());
+    checkWrite(s);
+    checkRead(s);
+  }
+
+  private void checkWrite(Schema schema) throws IOException {
+    AvroColumnWriter<Object> writer =
+      new AvroColumnWriter<Object>(schema, new ColumnFileMetaData());
+    int count = 0;
+    for (Object datum : new RandomData(schema, COUNT, SEED))
+      writer.write(datum);
+    writer.writeTo(FILE);
+  }
+
+  private void checkRead(Schema schema) throws IOException {
+    AvroColumnReader<Object> reader = new AvroColumnReader<Object>(FILE);
+    for (Object expected : new RandomData(schema, COUNT, SEED))
+      assertEquals(expected, reader.next());
+    reader.close();
   }
 
 }
