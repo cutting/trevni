@@ -103,8 +103,10 @@ public class AvroColumnReader<D>
 
   @Override
   public D next() {
-    this.column = 0;
     try {
+      for (int i = 0; i < values.length; i++)
+        values[i].startRow();
+      this.column = 0;
       return (D)read(subSchema);
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -113,7 +115,7 @@ public class AvroColumnReader<D>
 
   private Object read(Schema s) throws IOException {
     if (isSimple(s))
-      return values[column++].next();
+      return values[column++].nextValue();
 
     switch (s.getType()) {
     case MAP: 
@@ -128,12 +130,12 @@ public class AvroColumnReader<D>
       List elements = (List)new GenericData.Array(length, s);
       if (isSimple(s.getElementType())) {         // optimize simple arrays
         for (int i = 0; i < length; i++)
-          elements.set(i, values[column-1].next());
+          elements.add(values[column-1].nextValue());
       } else {
         int startColumn = column;
         for (int i = 0; i < length; i++) {
           this.column = startColumn;
-          elements.set(i, read(s.getElementType()));
+          elements.add(read(s.getElementType()));
         }
       }
       return elements;
@@ -143,7 +145,7 @@ public class AvroColumnReader<D>
         boolean selected = values[column++].nextLength() == 1;
         if (selected)
           if (isSimple(branch)) {
-            value = values[column-1].next();
+            value = values[column-1].nextValue();
           } else {
             value = read(branch);
           }

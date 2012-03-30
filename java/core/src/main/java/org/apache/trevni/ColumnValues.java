@@ -109,28 +109,33 @@ public class ColumnValues<T extends Comparable>
 
   @Override public T next() {
     try {
-      prepareToRead();
-      arrayLength--;
-      row++;
-      return previous = values.<T>readValue(type);
+      startRow();
+      return nextValue();
     } catch (IOException e) {
       throw new TrevniRuntimeException(e);
     }
   }
 
+  /** Expert: Returns the next value in a column. */
+  public T nextValue() throws IOException {
+    arrayLength--;
+    return previous = values.<T>readValue(type);
+  }
+
   /** Expert: Returns the next length in an array column. */
   public int nextLength() throws IOException {
     assert arrayLength == 0;
-    prepareToRead();
     return arrayLength = values.readInt();
   }
 
-  private void prepareToRead() throws IOException {
+  /** Expert: Called before any calls to nextLength() or nextValue(). */
+  public void startRow() throws IOException {
     if (row >= column.lastRow(block)) {
       if (block >= column.blockCount())
         throw new TrevniRuntimeException("Read past end of column.");
       startBlock(block+1);
     }
+    row++;
   }
 
   @Override public void remove() { throw new UnsupportedOperationException(); }
