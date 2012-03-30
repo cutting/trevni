@@ -36,6 +36,8 @@ public class ColumnValues<T extends Comparable>
   private long row = 0;
   private T previous; 
 
+  private int arrayLength;
+
   ColumnValues(ColumnDescriptor column) throws IOException {
     this.column = column;
     this.type = column.metaData.getType();
@@ -112,11 +114,18 @@ public class ColumnValues<T extends Comparable>
           throw new TrevniRuntimeException("Read past end of column.");
         startBlock(block+1);
       }
+      arrayLength--;
       row++;
       return previous = values.<T>readValue(type);
     } catch (IOException e) {
       throw new TrevniRuntimeException(e);
     }
+  }
+
+  /** Expert: Returns the next length in an array column. */
+  public int nextLength() throws IOException {
+    assert arrayLength == 0;
+    return arrayLength = values.readInt();
   }
 
   @Override public void remove() { throw new UnsupportedOperationException(); }

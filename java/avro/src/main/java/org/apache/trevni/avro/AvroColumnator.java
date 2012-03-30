@@ -17,37 +17,39 @@
  */
 package org.apache.trevni.avro;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Map;
 import java.util.IdentityHashMap;
 
 import org.apache.trevni.ColumnMetaData;
-import org.apache.trevni.ColumnFileWriter;
 import org.apache.trevni.ValueType;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
-import org.apache.avro.generic.GenericData;
 
-public class AvroShredder {
+class AvroColumnator {
 
   private Schema schema;
-  private GenericData data;
 
   private List<ColumnMetaData> columns = new ArrayList<ColumnMetaData>();
   private List<Integer> arrayWidths = new ArrayList<Integer>();
 
-  public AvroShredder(Schema schema, GenericData data) {
+  public AvroColumnator(Schema schema) {
     this.schema = schema;
-    this.data = data;
     columnize(null, schema, null, false);
   }
 
   public ColumnMetaData[] getColumns() {
     return columns.toArray(new ColumnMetaData[columns.size()]);
+  }
+
+  public int[] getArrayWidths() {
+    int[] result = new int[arrayWidths.size()];
+    int i = 0;
+    for (Integer width : arrayWidths)
+      result[i++] = width;
+    return result;
   }
 
   private Map<Schema,Schema> seen = new IdentityHashMap<Schema,Schema>();
@@ -115,7 +117,7 @@ public class AvroShredder {
     arrayWidths.set(start, columns.size()-start); // fixup with actual width
   }
 
-  private boolean isSimple(Schema s) {
+  static boolean isSimple(Schema s) {
     switch (s.getType()) {
     case NULL:
     case INT: case LONG:
@@ -144,61 +146,4 @@ public class AvroShredder {
     }
   }
 
-  public void shred(Object value, ColumnFileWriter writer) throws IOException {
-    writer.startRow();
-    int count = shred(value, schema, 0, writer);
-    assert(count == columns.size());
-    writer.endRow();
-  }
-  
-  private int shred(Object o, Schema s, int column,
-                    ColumnFileWriter writer) throws IOException {
-    if (isSimple(s)) {
-      writer.writeValue(o, column);
-      return column+1;
-    }
-    switch (s.getType()) {
-    case MAP: 
-      throw new RuntimeException("Unknown schema: "+s);
-    case RECORD: 
-      for (Field f : s.getFields())
-        column = shred(data.getField(o, f.name(), f.pos()), f.schema(),
-                       column, writer);
-      return column;
-    case ARRAY: 
-      Collection elements = (Collection)o;
-      writer.writeLength(elements.size(), column);
-      if (isSimple(s.getElementType())) {              // optimize simple arrays
-        for (Object element : elements)
-          writer.writeValue(element, column);
-        return column+1;
-      }
-      for (Object element : elements) {
-        writer.writeValue(null, column);
-        int c = shred(element, s.getElementType(), column+1, writer);
-        assert(c == column+arrayWidths.get(column));
-      }
-      return column+arrayWidths.get(column);
-    case UNION:
-      int b = data.resolveUnion(s, o);
-      int i = 0;
-      for (Schema branch : s.getTypes()) {
-        boolean selected = i++ == b;
-        if (!selected) {
-          writer.writeLength(0, column++);
-        } else {
-          writer.writeLength(1, column);
-          if (isSimple(branch)) {
-            writer.writeValue(o, column++);
-          } else {
-            writer.writeValue(null, column);
-            column = shred(o, branch, column+1, writer);
-          }
-        }
-      }
-      return column;
-    default:
-      throw new RuntimeException("Unknown schema: "+s);
-    }
-  }
 }    

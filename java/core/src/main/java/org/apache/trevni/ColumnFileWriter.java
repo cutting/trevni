@@ -71,6 +71,9 @@ public class ColumnFileWriter {
   /** Return this file's metadata. */
   public ColumnFileMetaData getMetaData() { return metaData; }
 
+  /** Return the number of columns in the file. */
+  public int getColumnCount() { return columnCount; }
+
   /** Add a row to the file. */
   public void writeRow(Object... row) throws IOException {
     startRow();

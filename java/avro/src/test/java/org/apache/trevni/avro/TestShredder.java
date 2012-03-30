@@ -21,7 +21,6 @@ import org.apache.trevni.ValueType;
 import org.apache.trevni.ColumnMetaData;
 
 import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericData;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -165,7 +164,7 @@ public class TestShredder {
 
   private void check(Schema s, ColumnMetaData... expected) {
     ColumnMetaData[] shredded =
-      new AvroShredder(s, GenericData.get()).getColumns();
+      new AvroColumnator(s).getColumns();
     assertEquals(expected.length, shredded.length);
     for (int i = 0; i < expected.length; i++)
       assertEquals(expected[i].toString(), shredded[i].toString());
