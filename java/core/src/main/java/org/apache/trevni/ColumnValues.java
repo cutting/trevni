@@ -108,6 +108,9 @@ public class ColumnValues<T extends Comparable>
   }
 
   @Override public T next() {
+    if (column.metaData.isArray() || column.metaData.getParent() != null)
+      throw new TrevniRuntimeException
+        ("Column is array: " +column.metaData.getName());
     try {
       startRow();
       return nextValue();
@@ -116,19 +119,8 @@ public class ColumnValues<T extends Comparable>
     }
   }
 
-  /** Expert: Returns the next value in a column. */
-  public T nextValue() throws IOException {
-    arrayLength--;
-    return previous = values.<T>readValue(type);
-  }
-
-  /** Expert: Returns the next length in an array column. */
-  public int nextLength() throws IOException {
-    assert arrayLength == 0;
-    return arrayLength = values.readInt();
-  }
-
-  /** Expert: Called before any calls to nextLength() or nextValue(). */
+  /** Expert: Must be called before any calls to {@link #nextLength()} or
+   * {@link #nextValue()}. */
   public void startRow() throws IOException {
     if (row >= column.lastRow(block)) {
       if (block >= column.blockCount())
@@ -136,6 +128,21 @@ public class ColumnValues<T extends Comparable>
       startBlock(block+1);
     }
     row++;
+  }
+
+  /** Expert: Returns the next length in an array column. */
+  public int nextLength() throws IOException {
+    if (!column.metaData.isArray())
+      throw new TrevniRuntimeException
+        ("Column is not array: " +column.metaData.getName());
+    assert arrayLength == 0;
+    return arrayLength = values.readInt();
+  }
+
+  /** Expert: Returns the next value in a column. */
+  public T nextValue() throws IOException {
+    arrayLength--;
+    return previous = values.<T>readValue(type);
   }
 
   @Override public void remove() { throw new UnsupportedOperationException(); }

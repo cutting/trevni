@@ -24,6 +24,7 @@ import java.util.Collection;
 
 import org.apache.trevni.ColumnFileMetaData;
 import org.apache.trevni.ColumnFileWriter;
+import org.apache.trevni.TrevniRuntimeException;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -31,7 +32,8 @@ import org.apache.avro.generic.GenericData;
 
 import static org.apache.trevni.avro.AvroColumnator.isSimple;
 
-/** Write Avro records to a Trevni column file. */
+/** Write Avro records to a Trevni column file.  Each primitive type is written
+ * to a separate column. */
 public class AvroColumnWriter<D> {
   private Schema schema;
   private GenericData model;
@@ -80,7 +82,7 @@ public class AvroColumnWriter<D> {
     }
     switch (s.getType()) {
     case MAP: 
-      throw new RuntimeException("Unknown schema: "+s);
+      throw new TrevniRuntimeException("Unknown schema: "+s);
     case RECORD: 
       for (Field f : s.getFields())
         column = write(model.getField(o,f.name(),f.pos()), f.schema(), column);
@@ -119,7 +121,7 @@ public class AvroColumnWriter<D> {
       }
       return column;
     default:
-      throw new RuntimeException("Unknown schema: "+s);
+      throw new TrevniRuntimeException("Unknown schema: "+s);
     }
   }
 

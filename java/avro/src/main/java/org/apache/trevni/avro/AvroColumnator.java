@@ -24,10 +24,12 @@ import java.util.IdentityHashMap;
 
 import org.apache.trevni.ColumnMetaData;
 import org.apache.trevni.ValueType;
+import org.apache.trevni.TrevniRuntimeException;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 
+/** Utility that computes the column layout of a schema. */
 class AvroColumnator {
 
   private Schema schema;
@@ -40,10 +42,13 @@ class AvroColumnator {
     columnize(null, schema, null, false);
   }
 
+  /** Return columns for the schema. */
   public ColumnMetaData[] getColumns() {
     return columns.toArray(new ColumnMetaData[columns.size()]);
   }
 
+  /** Return array giving the number of columns immediately following each
+   * column that are descendents of that column. */
   public int[] getArrayWidths() {
     int[] result = new int[arrayWidths.size()];
     int i = 0;
@@ -64,12 +69,12 @@ class AvroColumnator {
     }
 
     if (seen.containsKey(s))                      // catch recursion
-      throw new RuntimeException("Cannot shred recursive schemas: "+s);
+      throw new TrevniRuntimeException("Cannot shred recursive schemas: "+s);
     seen.put(s, s);
     
     switch (s.getType()) {
     case MAP: 
-      throw new RuntimeException("Can't shred maps yet: "+s);
+      throw new TrevniRuntimeException("Can't shred maps yet: "+s);
     case RECORD:
       for (Field field : s.getFields())           // flatten fields to columns
         columnize(p(path, field.name()), field.schema(), parent, isArray);
@@ -84,7 +89,7 @@ class AvroColumnator {
         addArrayColumn(p(path, branch.getFullName()), branch, parent);
       break;
     default:
-      throw new RuntimeException("Unknown schema: "+s);
+      throw new TrevniRuntimeException("Unknown schema: "+s);
     }
   }
 
@@ -99,7 +104,7 @@ class AvroColumnator {
       column.setParent(parent);
     column.isArray(isArray);
     columns.add(column);
-    arrayWidths.add(isArray ? 1 : -1);
+    arrayWidths.add(1);                           // placeholder
     return column;
  }
 
@@ -142,7 +147,7 @@ class AvroColumnator {
     case ENUM:   return ValueType.INT;
     case FIXED:  return ValueType.BYTES;
     default:
-      throw new RuntimeException("Unknown schema: "+s);
+      throw new TrevniRuntimeException("Unknown schema: "+s);
     }
   }
 

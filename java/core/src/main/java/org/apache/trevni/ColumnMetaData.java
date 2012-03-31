@@ -63,7 +63,7 @@ public class ColumnMetaData extends MetaData<ColumnMetaData> {
    */
   public ColumnMetaData hasIndexValues(boolean values) {
     if (isArray)
-      throw new RuntimeException("Array column cannot have index: "+this);
+      throw new TrevniRuntimeException("Array column cannot have index: "+this);
     this.values = values;
     return setReservedBoolean(VALUES_KEY, values);
   }
@@ -71,9 +71,9 @@ public class ColumnMetaData extends MetaData<ColumnMetaData> {
   /** Set this column's parent.  A parent must be a preceding array column. */
   public ColumnMetaData setParent(ColumnMetaData parent) {
     if (!parent.isArray())
-      throw new RuntimeException("Parent is not an array: "+parent);
+      throw new TrevniRuntimeException("Parent is not an array: "+parent);
     if (values)
-      throw new RuntimeException("Array column cannot have index: "+this);
+      throw new TrevniRuntimeException("Array column cannot have index: "+this);
     this.parent = parent;
     return setReserved(PARENT_KEY, parent.getName());
   }
@@ -81,7 +81,7 @@ public class ColumnMetaData extends MetaData<ColumnMetaData> {
   /** Set whether this column is an array. */
   public ColumnMetaData isArray(boolean isArray) {
     if (values)
-      throw new RuntimeException("Array column cannot have index: "+this);
+      throw new TrevniRuntimeException("Array column cannot have index: "+this);
     this.isArray = isArray;
     return setReservedBoolean(ARRAY_KEY, isArray);
   }

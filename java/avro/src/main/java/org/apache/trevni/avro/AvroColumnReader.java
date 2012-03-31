@@ -31,6 +31,7 @@ import org.apache.trevni.ColumnFileReader;
 import org.apache.trevni.ColumnValues;
 import org.apache.trevni.Input;
 import org.apache.trevni.InputFile;
+import org.apache.trevni.TrevniRuntimeException;
 
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
@@ -38,61 +39,80 @@ import org.apache.avro.generic.GenericData;
 
 import static org.apache.trevni.avro.AvroColumnator.isSimple;
 
-/** Random access to files written with {@link AvroColumnWriter}. */
+/** Read files written with {@link AvroColumnWriter}.  A subset of the schema
+ * used for writing may be specified when reading.  In this case only columns
+ * of the subset schema are read. */
 public class AvroColumnReader<D>
   implements Iterator<D>, Iterable<D>, Closeable {
 
   private ColumnFileReader reader;
   private GenericData model;
-  private Schema fullSchema;
-  private Schema subSchema;
+  private Schema fileSchema;
+  private Schema readSchema;
   
   private ColumnValues[] values;
   private int[] arrayWidths;
   private int column;                          // current index in values
 
-  /** Construct a reader for a file. */
-  public AvroColumnReader(File file) throws IOException {
-    this(new InputFile(file), GenericData.get());
+  /** Parameters for reading an Avro column file. */
+  public static class Params {
+    Input input;
+    Schema schema;
+    GenericData model = GenericData.get();
+
+    /** Construct reading from a file. */
+    public Params(File file) throws IOException {
+      this(new InputFile(file));
+    }
+
+    /** Construct reading from input. */
+    public Params(Input input) { this.input = input; }
+
+    /** Set subset schema to project data down to. */
+    public Params setSchema(Schema schema) {
+      this.schema = schema;
+      return this;
+    }
+
+    /** Set data representation. */
+    public Params setModel(GenericData model) {
+      this.model = model;
+      return this;
+    }
   }
 
   /** Construct a reader for a file. */
-  public AvroColumnReader(File file, GenericData model) throws IOException {
-    this(new InputFile(file), model);
-  }
-
-  /** Construct a reader for a file. */
-  public AvroColumnReader(Input in, GenericData model)
+  public AvroColumnReader(Params params)
     throws IOException {
-    this.reader = new ColumnFileReader(in);
-    this.model = model;
-    this.fullSchema =
+    this.reader = new ColumnFileReader(params.input);
+    this.model = params.model;
+    this.fileSchema =
       Schema.parse(reader.getMetaData().getString(AvroColumnWriter.SCHEMA_KEY));
-    setSchema(fullSchema);
+    this.readSchema = params.schema == null ? fileSchema : params.schema;
+    initialize();
   }
 
   /** Return the schema for data in this file. */
-  public Schema getFullSchema() { return fullSchema; }
+  public Schema getFileSchema() { return fileSchema; }
 
-  /** Set a subset schema for reading.  By default, the full schema. */
-  void setSchema(Schema subSchema) throws IOException {
-    this.subSchema = subSchema;
-
-    Map<String,Integer> fullColumns = new HashMap<String,Integer>();
+  void initialize() throws IOException {
+    // compute a mapping from column name to number for file
+    Map<String,Integer> fileColumnNumbers = new HashMap<String,Integer>();
     int i = 0;
-    for (ColumnMetaData c : new AvroColumnator(fullSchema).getColumns())
-      fullColumns.put(c.getName(), i++);
+    for (ColumnMetaData c : new AvroColumnator(fileSchema).getColumns())
+      fileColumnNumbers.put(c.getName(), i++);
 
-    AvroColumnator subColumnator = new AvroColumnator(subSchema);
-    this.arrayWidths = subColumnator.getArrayWidths();
-    ColumnMetaData[] subColumns = subColumnator.getColumns();
-    this.values = new ColumnValues[subColumns.length];
+    // create iterator for each column in readSchema
+    AvroColumnator readColumnator = new AvroColumnator(readSchema);
+    this.arrayWidths = readColumnator.getArrayWidths();
+    ColumnMetaData[] readColumns = readColumnator.getColumns();
+    this.values = new ColumnValues[readColumns.length];
     int j = 0;
-    for (ColumnMetaData c : subColumns) {
-      Integer column = fullColumns.get(c.getName());
-      if (column == null)
-        throw new RuntimeException("No column named: "+c.getName());
-      values[j++] = reader.getValues(column);
+    for (ColumnMetaData c : readColumns) {
+      Integer n = fileColumnNumbers.get(c.getName());
+      if (n == null)
+        throw new TrevniRuntimeException("No column named: "+c.getName());
+      values[j++] = reader.getValues(n);
     }
   }
 
@@ -110,9 +130,9 @@ public class AvroColumnReader<D>
       for (int i = 0; i < values.length; i++)
         values[i].startRow();
       this.column = 0;
-      return (D)read(subSchema);
+      return (D)read(readSchema);
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      throw new TrevniRuntimeException(e);
     }
   }
 
@@ -122,7 +142,7 @@ public class AvroColumnReader<D>
 
     switch (s.getType()) {
     case MAP: 
-      throw new RuntimeException("Unknown schema: "+s);
+      throw new TrevniRuntimeException("Unknown schema: "+s);
     case RECORD: 
       Object record = model.newRecord(null, s);
       for (Field f : s.getFields())
@@ -155,7 +175,7 @@ public class AvroColumnReader<D>
       }
       return value;
     default:
-      throw new RuntimeException("Unknown schema: "+s);
+      throw new TrevniRuntimeException("Unknown schema: "+s);
     }
   }
 

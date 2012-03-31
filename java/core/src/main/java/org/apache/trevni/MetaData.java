@@ -134,7 +134,7 @@ public class MetaData<T extends MetaData> extends LinkedHashMap<String,byte[]> {
       try {
         buffer.append(new String(e.getValue(), "ISO-8859-1"));
       } catch (java.io.UnsupportedEncodingException error) {
-        throw new RuntimeException(error);
+        throw new TrevniRuntimeException(error);
       }
       buffer.append(" ");
     }

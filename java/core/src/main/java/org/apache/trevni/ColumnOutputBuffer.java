@@ -53,7 +53,7 @@ class ColumnOutputBuffer {
   }
 
   public void writeLength(int length) throws IOException {
-    throw new RuntimeException("Not an array column: "+meta);
+    throw new TrevniRuntimeException("Not an array column: "+meta);
   }
 
   public void writeValue(Object value) throws IOException {

@@ -191,7 +191,8 @@ public class TestShredder {
   }
 
   private void checkRead(Schema schema) throws IOException {
-    AvroColumnReader<Object> reader = new AvroColumnReader<Object>(FILE);
+    AvroColumnReader<Object> reader =
+      new AvroColumnReader<Object>(new AvroColumnReader.Params(FILE));
     for (Object expected : new RandomData(schema, COUNT, SEED))
       assertEquals(expected, reader.next());
     reader.close();
