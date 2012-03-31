@@ -118,21 +118,18 @@ public class ColumnValues<T extends Comparable>
 
   /** Expert: Returns the next value in a column. */
   public T nextValue() throws IOException {
-    System.out.println(column.metaData.getName()+" nextValue");
     arrayLength--;
     return previous = values.<T>readValue(type);
   }
 
   /** Expert: Returns the next length in an array column. */
   public int nextLength() throws IOException {
-    System.out.println(column.metaData.getName()+" nextLength");
     assert arrayLength == 0;
     return arrayLength = values.readInt();
   }
 
   /** Expert: Called before any calls to nextLength() or nextValue(). */
   public void startRow() throws IOException {
-    System.out.println(column.metaData.getName()+" startRow");
     if (row >= column.lastRow(block)) {
       if (block >= column.blockCount())
         throw new TrevniRuntimeException("Read past end of column.");

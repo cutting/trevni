@@ -31,7 +31,7 @@ import static org.junit.Assert.*;
 
 public class TestShredder {
 
-  private static final int COUNT = 1;
+  private static final int COUNT = 10;
   private static final File FILE = new File("target", "test.trv");
   private static final long SEED = System.currentTimeMillis();
 
@@ -171,7 +171,6 @@ public class TestShredder {
   }
 
   private void check(Schema s, ColumnMetaData... expected) throws Exception {
-    System.out.println("Schema="+s);
     ColumnMetaData[] shredded = new AvroColumnator(s).getColumns();
     assertEquals(expected.length, shredded.length);
     for (int i = 0; i < expected.length; i++)
@@ -185,7 +184,6 @@ public class TestShredder {
       new AvroColumnWriter<Object>(schema, new ColumnFileMetaData());
     int count = 0;
     for (Object datum : new RandomData(schema, COUNT, SEED)) {
-      System.out.println("datum="+datum);
       writer.write(datum);
     }
     writer.writeTo(FILE);

@@ -48,6 +48,7 @@ public class AvroColumnReader<D>
   private Schema subSchema;
   
   private ColumnValues[] values;
+  private int[] arrayWidths;
   private int column;                          // current index in values
 
   /** Construct a reader for a file. */
@@ -82,7 +83,9 @@ public class AvroColumnReader<D>
     for (ColumnMetaData c : new AvroColumnator(fullSchema).getColumns())
       fullColumns.put(c.getName(), i++);
 
-    ColumnMetaData[] subColumns = new AvroColumnator(subSchema).getColumns();
+    AvroColumnator subColumnator = new AvroColumnator(subSchema);
+    this.arrayWidths = subColumnator.getArrayWidths();
+    ColumnMetaData[] subColumns = subColumnator.getColumns();
     this.values = new ColumnValues[subColumns.length];
     int j = 0;
     for (ColumnMetaData c : subColumns) {
@@ -140,10 +143,13 @@ public class AvroColumnReader<D>
     case UNION:
       Object value = null;
       for (Schema branch : s.getTypes()) {
-        if (values[column++].nextLength() == 1) {
-          value = values[column-1].nextValue();
+        if (values[column].nextLength() == 1) {
+          value = values[column].nextValue();
+          column++;
           if (!isSimple(branch))
             value = read(branch);
+        } else {
+          column += arrayWidths[column];
         }
       }
       return value;
