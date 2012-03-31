@@ -1,10 +1,6 @@
 Arrays
- - test writing
- - implement reading
- - test reading
- - optimize unions of a primitive with null
- - implement maps
  - update specification
+ - implement maps
 
 Improvements/Optimizations:
 - implement iterator subclasses per type to avoid boxing & dispatch?
@@ -12,6 +8,5 @@ Improvements/Optimizations:
 - add benchmarks
 
 Integration with other tools:
-- implement Avro record shredder
 - implement Protobuf record shredder
 - implement Thrift record shredder

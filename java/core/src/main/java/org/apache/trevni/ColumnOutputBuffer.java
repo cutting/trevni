@@ -58,7 +58,7 @@ class ColumnOutputBuffer {
 
   public void writeValue(Object value) throws IOException {
     buffer.writeValue(value, meta.getType());
-    if (meta.hasIndexValues() && rowCount == 1)
+    if (meta.hasIndexValues() && rowCount == 0)
       firstValues.add(buffer.toByteArray());
   }
 
