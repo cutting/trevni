@@ -1,12 +1,15 @@
 Arrays
+ - incorporate schema from Dremel paper into tests;
+ - add tests that read subset of schema written;
  - update specification
  - implement maps
+
+Integration with other tools:
+- implement Protobuf record shredder
+- implement Thrift record shredder
 
 Improvements/Optimizations:
 - implement iterator subclasses per type to avoid boxing & dispatch?
 - change writer api to addRowValue(int column, T) to avoid allocations?
 - add benchmarks
 
-Integration with other tools:
-- implement Protobuf record shredder
-- implement Thrift record shredder
