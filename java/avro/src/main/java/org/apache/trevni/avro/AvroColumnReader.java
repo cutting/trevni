@@ -129,16 +129,17 @@ public class AvroColumnReader<D>
         model.setField(record, f.name(), f.pos(), read(f.schema()));
       return record;
     case ARRAY: 
-      int length = values[column++].nextLength();
+      int length = values[column].nextLength();
       List elements = (List)new GenericData.Array(length, s);
       int startColumn = column;
       for (int i = 0; i < length; i++) {
         this.column = startColumn;
-        Object value = values[column-1].nextValue();
+        Object value = values[column++].nextValue();
         if (!isSimple(s.getElementType()))
           value = read(s.getElementType());
         elements.add(value);
       }
+      column = startColumn + arrayWidths[startColumn];
       return elements;
     case UNION:
       Object value = null;
