@@ -48,7 +48,7 @@ public class ColumnFileWriter {
     for (int i = 0; i < columnCount; i++) {
       ColumnMetaData c = columnMeta[i];
       c.setDefaults(metaData);
-      columns[i] = c.isArray() || c.getParent()!=null
+      columns[i] = c.isArray()
         ? new ArrayColumnOutputBuffer(c)
         : new ColumnOutputBuffer(c);
     }
@@ -84,6 +84,7 @@ public class ColumnFileWriter {
 
   /** Expert: Called before any values are written to a row. */
   public void startRow() throws IOException {
+    System.out.println("startRow");
     for (int column = 0; column < columnCount; column++)
       columns[column].startRow();
   }
@@ -91,6 +92,7 @@ public class ColumnFileWriter {
   /** Expert: Declare a count of items to be written to an array column or a
    * column whose parent is an array. */
   public void writeLength(int length, int column) throws IOException {
+    System.out.println("writeLen column="+column+" len="+length);
     columns[column].writeLength(length);
   }
 
@@ -99,11 +101,15 @@ public class ColumnFileWriter {
    * #writeLength(int, int)} and must be called that many times.   For normal
    * columns this is called once for each row in the column. */
   public void writeValue(Object value, int column) throws IOException {
+    System.out.println("writeVal column="+column+" val="+value);
     columns[column].writeValue(value);
   }
 
   /** Expert: Called after all values are written to a row. */
   public void endRow() throws IOException {
+    System.out.println("endRow");
+    for (int column = 0; column < columnCount; column++)
+      columns[column].endRow();
     rowCount++;
   }
 

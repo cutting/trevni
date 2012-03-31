@@ -171,6 +171,7 @@ public class TestShredder {
   }
 
   private void check(Schema s, ColumnMetaData... expected) throws Exception {
+    System.out.println("Schema="+s);
     ColumnMetaData[] shredded = new AvroColumnator(s).getColumns();
     assertEquals(expected.length, shredded.length);
     for (int i = 0; i < expected.length; i++)
@@ -183,8 +184,10 @@ public class TestShredder {
     AvroColumnWriter<Object> writer =
       new AvroColumnWriter<Object>(schema, new ColumnFileMetaData());
     int count = 0;
-    for (Object datum : new RandomData(schema, COUNT, SEED))
+    for (Object datum : new RandomData(schema, COUNT, SEED)) {
+      System.out.println("datum="+datum);
       writer.write(datum);
+    }
     writer.writeTo(FILE);
   }
 

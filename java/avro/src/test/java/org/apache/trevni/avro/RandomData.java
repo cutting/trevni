@@ -111,7 +111,7 @@ public class RandomData implements Iterable<Object> {
     int length = rand.nextInt(maxLength);
     StringBuilder buffer = new StringBuilder(length);
     for (int i = 0; i < length; i++)
-      buffer.append(((char)'a'+rand.nextInt('z'-'a')));
+      buffer.append('a'+(char)(rand.nextInt('z'-'a')));
     return buffer.toString();
   }
 

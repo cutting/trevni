@@ -69,6 +69,7 @@ public class AvroColumnWriter<D> {
   public void write(D value) throws IOException {
     writer.startRow();
     int count = write(value, schema, 0);
+    System.out.println("count = "+count+" columns ="+writer.getColumnCount());
     assert(count == writer.getColumnCount());
     writer.endRow();
   }
@@ -105,7 +106,8 @@ public class AvroColumnWriter<D> {
       for (Schema branch : s.getTypes()) {
         boolean selected = i++ == b;
         if (!selected) {
-          writer.writeLength(0, column++);
+          writer.writeLength(0, column);
+          column+=arrayWidths[column];
         } else {
           writer.writeLength(1, column);
           if (isSimple(branch)) {

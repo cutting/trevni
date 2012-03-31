@@ -31,6 +31,7 @@ class ColumnOutputBuffer {
   private List<BlockDescriptor> blockDescriptors;
   private List<byte[]> blockData;
   private List<byte[]> firstValues;
+  private int rowCount;
 
   public ColumnOutputBuffer(ColumnMetaData meta) throws IOException {
     this.meta = meta;
@@ -57,16 +58,20 @@ class ColumnOutputBuffer {
 
   public void writeValue(Object value) throws IOException {
     buffer.writeValue(value, meta.getType());
-    if (meta.hasIndexValues() && buffer.getRowCount() == 1)
+    if (meta.hasIndexValues() && rowCount == 1)
       firstValues.add(buffer.toByteArray());
   }
 
+  public void endRow() throws IOException {
+    rowCount++;
+  }
+
   private void flushBuffer() throws IOException {
-    if (buffer.getRowCount() == 0) return;
+    if (rowCount == 0) return;
     ByteBuffer raw = buffer.asByteBuffer();
     ByteBuffer c = codec.compress(raw);
 
-    blockDescriptors.add(new BlockDescriptor(buffer.getRowCount(),
+    blockDescriptors.add(new BlockDescriptor(rowCount,
                                              raw.remaining(),
                                              c.remaining()));
 
@@ -76,6 +81,7 @@ class ColumnOutputBuffer {
     blockData.add(data.array());
 
     buffer = new OutputBuffer();
+    rowCount = 0;
   }
 
   public long size() throws IOException {
