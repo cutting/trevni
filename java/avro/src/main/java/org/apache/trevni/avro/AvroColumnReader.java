@@ -128,27 +128,23 @@ public class AvroColumnReader<D>
     case ARRAY: 
       int length = values[column++].nextLength();
       List elements = (List)new GenericData.Array(length, s);
-      if (isSimple(s.getElementType())) {         // optimize simple arrays
-        for (int i = 0; i < length; i++)
-          elements.add(values[column-1].nextValue());
-      } else {
-        int startColumn = column;
-        for (int i = 0; i < length; i++) {
-          this.column = startColumn;
-          elements.add(read(s.getElementType()));
-        }
+      int startColumn = column;
+      for (int i = 0; i < length; i++) {
+        this.column = startColumn;
+        Object value = values[column-1].nextValue();
+        if (!isSimple(s.getElementType()))
+          value = read(s.getElementType());
+        elements.add(value);
       }
       return elements;
     case UNION:
       Object value = null;
       for (Schema branch : s.getTypes()) {
-        boolean selected = values[column++].nextLength() == 1;
-        if (selected)
-          if (isSimple(branch)) {
-            value = values[column-1].nextValue();
-          } else {
+        if (values[column++].nextLength() == 1) {
+          value = values[column-1].nextValue();
+          if (!isSimple(branch))
             value = read(branch);
-          }
+        }
       }
       return value;
     default:
