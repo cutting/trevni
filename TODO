@@ -5,6 +5,7 @@ Arrays
  - implement maps
 
 Integration with other tools:
+- implement JSON shredder and dumper tool
 - implement Protobuf record shredder
 - implement Thrift record shredder
 
