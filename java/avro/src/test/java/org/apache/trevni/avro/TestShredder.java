@@ -105,15 +105,15 @@ public class TestShredder {
     String s = 
       "{\"type\":\"record\",\"name\":\"S\",\"fields\":["
       +"{\"name\":\"x\",\"type\":\"int\"},"
-      +"{\"name\":\"R\",\"type\":"+RECORD_ARRAY+"},"
+      +"{\"name\":\"A\",\"type\":"+RECORD_ARRAY+"},"
       +"{\"name\":\"y\",\"type\":\"string\"}"
       +"]}";
-    ColumnMetaData p = new ColumnMetaData("R", ValueType.NULL).isArray(true);
+    ColumnMetaData p = new ColumnMetaData("A#R", ValueType.NULL).isArray(true);
     check(Schema.parse(s),
           new ColumnMetaData("x", ValueType.INT),
           p,
-          new ColumnMetaData("R#x", ValueType.INT).setParent(p),
-          new ColumnMetaData("R#y", ValueType.STRING).setParent(p),
+          new ColumnMetaData("A#R#x", ValueType.INT).setParent(p),
+          new ColumnMetaData("A#R#y", ValueType.STRING).setParent(p),
           new ColumnMetaData("y", ValueType.STRING));
   }
 

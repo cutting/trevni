@@ -80,17 +80,21 @@ class AvroColumnator {
         columnize(p(path, field.name()), field.schema(), parent, isArray);
       break;
     case ARRAY: 
-      if (parent != null)
-        path = p(parent.getName(), s.getElementType().getFullName());
-      addArrayColumn(path, s.getElementType(), parent);
+      addArrayColumn(p(path, s.getElementType()), s.getElementType(), parent);
       break;
     case UNION:
       for (Schema branch : s.getTypes())          // array per branch
-        addArrayColumn(p(path, branch.getFullName()), branch, parent);
+        addArrayColumn(p(path, branch), branch, parent);
       break;
     default:
       throw new TrevniRuntimeException("Unknown schema: "+s);
     }
+  }
+
+  private String p(String parent, Schema child) {
+    if (child.getType() == Schema.Type.UNION)
+      return parent;
+    return p(parent, child.getFullName());
   }
 
   private String p(String parent, String child) {
