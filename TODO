@@ -1,6 +1,4 @@
 Arrays
- - incorporate schema from Dremel paper into tests;
- - add tests that read subset of schema written;
  - update specification
  - implement maps
 
