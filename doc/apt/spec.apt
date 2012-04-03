@@ -174,6 +174,8 @@ whether subsequent bytes are present.  For example:
 
   The following type names are used to describe column values:
 
+  * <<null>>, requires zero bytes.  Sometimes used in array columns.
+
   * <<int>>, like <long>, but restricted to 32-bit signed values
 
   * <<long>> 64-bit signed values, represented as above
@@ -206,6 +208,8 @@ whether subsequent bytes are present.  For example:
 
   All metadata properties that start with "cf." are reserved.
 
+** File Metadata
+
   The following file metadata properties are defined:
 
   * <<cf.codec>> the name of the default compression codec used to
@@ -219,6 +223,8 @@ whether subsequent bytes are present.  For example:
     "null".  Checksums are described in more detail below.
 
   []
+
+** Column Metadata
 
   The following column metadata properties are defined:
 
@@ -234,8 +240,83 @@ whether subsequent bytes are present.  For example:
 
   * <<cf.values>> if present, indicates that the initial value of each
     block in this column will be stored in the block’s descriptor.
+    Not permitted for array columns or columns that specify a parent.
+
+  * <<cf.array>> if present, indicates that each row in this column
+    contains a sequence of values of the named type rather than just a
+    single value.  An integer length precedes each sequence of values
+    indicating the count of values in the sequence.
+
+  * <<cf.parent>> if present, the name of an <array> column whose
+    lengths are also used by this column.  Thus values of this column
+    are sequences but no lengths are stored in this column.
 
   []
+
+  For example, consider the following row, as JSON, where all values
+  are primitive types, but one has multiple values.
+
+---
+{"id"=566, "date"=23423234234
+ "from"="foo@bar.com",
+ "to"=["bar@baz.com", "bang@foo.com"],
+ "content"="Hi!"}
+---
+
+  The columns for this might be specified as:
+
+---
+cf.name=id      cf.type=int
+cf.name=date    cf.type=long
+cf.name=from    cf.type=string
+cf.name=from    cf.type=string  cf.array=true
+cf.name=content cf.type=string 
+---
+
+  If a row contains an array of records, e.g. "received" in the following:
+
+---
+{"id"=566, "date"=23423234234
+ "from"="foo@bar.com",
+ "to"=["bar@baz.com", "bang@foo.com"],
+ "content"="Hi!"
+ "received"=[{"date"=234234234234, "host"="192.168.0.0.1"},
+             {"date"=234234545645, "host"="192.168.0.0.2"}]
+}
+---
+
+  Then one can define a parent column followed by a column for each
+  field in the record, adding the following columns:
+
+---
+cf.name=received     cf.type=null   cf.array=true
+cf.name=date         cf.type=long                 cf.parent=received
+cf.name=host         cf.type=string               cf.parent=received
+---
+
+  If an array value itself contains an array, e.g. the "sigs" below:
+
+---
+{"id"=566, "date"=23423234234
+ "from"="foo@bar.com",
+ "to"=["bar@baz.com", "bang@foo.com"],
+ "content"="Hi!"
+ "received"=[{"date"=234234234234, "host"="192.168.0.0.1",
+              "sigs"=[{"algo"="weak", "value"="0af345de"}]},
+             {"date"=234234545645, "host"="192.168.0.0.2",
+              "sigs"=[]}]
+}
+---
+
+  Then a parent column may be defined that itself has a parent column.
+
+---
+cf.name=sigs         cf.type=null   cf.array=true cf.parent=received
+cf.name=algo         cf.type=string               cf.parent=sigs
+cf.name=value        cf.type=string               cf.parent=sigs
+---
+
+** Block Metadata
 
   No block metadata properties are currently defined.
 
@@ -251,7 +332,7 @@ whether subsequent bytes are present.  For example:
 
   A <<file header>> consists of:
 
-  * Four bytes, ASCII 'T', 'r', 'v', followed by 0.
+  * Four bytes, ASCII 'T', 'r', 'v', followed by 1.
 
   * a <fixed64> indicating the number of rows in the file
 
@@ -292,8 +373,10 @@ whether subsequent bytes are present.  For example:
 
   A <<block>> consists of:
 
-  * The serialized column values. If a codec is specified, this is
-    compressed by that codec
+  * The serialized column values.  If a column is an array column then
+    value sequences are preceded by their length, as an <int>.  If a
+    codec is specified, the values and lengths are compressed by that
+    codec.
 
   * The checksum, as determined by the file metadata.
 
