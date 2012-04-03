@@ -46,12 +46,15 @@
     <avro-version>1.6.2</avro-version>
     <junit-version>4.10</junit-version>
     <snappy-java-version>1.0.4.1</snappy-java-version>
+    <hadoop-version>0.20.205.0</hadoop-version>
+    <jackson-version>1.8.8</jackson-version>
 
     <!-- version properties for plugins -->
     <checkstyle-plugin-version>2.8</checkstyle-plugin-version>
     <compiler-plugin-version>2.3.2</compiler-plugin-version>
     <github-site-plugin-version>0.4</github-site-plugin-version>
     <maven-site-plugin-version>3.0</maven-site-plugin-version>
+    <shade-plugin-version>1.5</shade-plugin-version>
 
   </properties>
 

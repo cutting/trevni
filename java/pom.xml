@@ -36,6 +36,7 @@
   <modules>
     <module>core</module>
     <module>avro</module>
+    <module>tool</module>
   </modules>
 
   <build>
