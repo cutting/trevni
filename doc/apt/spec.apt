@@ -120,7 +120,7 @@ Rationale
 * Discussion
 
   The use of a single block per file achieves the same effect as the
-  custom block placement policy described in the CIF paper [{{1}}],
+  custom block placement policy described in the {{CIF}} paper,
   but while still permitting HDFS rebalancing and not increasing the
   number of files in the namespace.
 
@@ -444,12 +444,10 @@ Implementation Notes
 
 * References
 
-  [{1}] {{http://arxiv.org/pdf/1105.4252.pdf}<Column-Oriented Storage
-  Techniques for MapReduce>}, Floratou, Patel, Shekita, & Tata, VLDB
+  {CIF} {{{http://arxiv.org/pdf/1105.4252.pdf}<Column-Oriented Storage
+  Techniques for MapReduce>}}, Floratou, Patel, Shekita, & Tata, VLDB
   2001.
 
-  [{2}] {{http://research.google.com/pubs/archive/36632.pdf}<Dremel:
-  Interactive Analysis of Web-Scale Datasets>, Melnik, Gubarev, Long,
+  {DREMEL} {{{http://research.google.com/pubs/archive/36632.pdf}<Dremel:
+  Interactive Analysis of Web-Scale Datasets>}}, Melnik, Gubarev, Long,
   Romer, Shivakumar, & Tolton, VLDB 2010.
-
-
