@@ -120,9 +120,9 @@ Rationale
 * Discussion
 
   The use of a single block per file achieves the same effect as the
-  custom block placement policy described in the IBM paper, but while
-  still permitting HDFS rebalancing and not increasing the number of
-  files in the namespace.
+  custom block placement policy described in the CIF paper [{{1}}],
+  but while still permitting HDFS rebalancing and not increasing the
+  number of files in the namespace.
 
 Format Specification
 
@@ -403,9 +403,8 @@ cf.name=value        cf.type=string               cf.parent=sigs
   We define a standard mapping for how types defined in various
   serialization systems are represented in a column file.  Records
   from these systems are <shredded> into columns.  When records are
-  nested, a depth-first recursive walk might assign a separate column
-  for each primitive value, or one might only create a column for each
-  field in the top-level record.
+  nested, a depth-first recursive walk can assign a separate column
+  for each primitive value.
 
 ** Avro
 
@@ -442,4 +441,15 @@ Implementation Notes
 
   (1) is the simplest to implement and most implementations should
   start with it.
+
+* References
+
+  [{1}] {{http://arxiv.org/pdf/1105.4252.pdf}<Column-Oriented Storage
+  Techniques for MapReduce>}, Floratou, Patel, Shekita, & Tata, VLDB
+  2001.
+
+  [{2}] {{http://research.google.com/pubs/archive/36632.pdf}<Dremel:
+  Interactive Analysis of Web-Scale Datasets>, Melnik, Gubarev, Long,
+  Romer, Shivakumar, & Tolton, VLDB 2010.
+
 
