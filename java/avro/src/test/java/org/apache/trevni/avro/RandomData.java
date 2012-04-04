@@ -32,26 +32,22 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 
+import org.apache.trevni.TestUtil;
+
 /** Generates schema data as Java objects with random values. */
 public class RandomData implements Iterable<Object> {
   private final Schema root;
-  private final long seed;
   private final int count;
 
   public RandomData(Schema schema, int count) {
-    this(schema, count, System.currentTimeMillis());
-  }
-
-  public RandomData(Schema schema, int count, long seed) {
     this.root = schema;
-    this.seed = seed;
     this.count = count;
   }
   
   public Iterator<Object> iterator() {
     return new Iterator<Object>() {
       private int n;
-      private Random random = new Random(seed);
+      private Random random = TestUtil.createRandom();
       public boolean hasNext() { return n < count; }
       public Object next() {
         n++;
@@ -84,7 +80,7 @@ public class RandomData implements Iterable<Object> {
       length = (random.nextInt(5)+2)-d;
       Map<Object,Object> map = new HashMap<Object,Object>(length<=0?0:length);
       for (int i = 0; i < length; i++) {
-        map.put(randomString(random, 40),
+        map.put(TestUtil.randomString(random),
                 generate(schema.getValueType(), random, d+1));
       }
       return map;
@@ -95,8 +91,8 @@ public class RandomData implements Iterable<Object> {
       byte[] bytes = new byte[schema.getFixedSize()];
       random.nextBytes(bytes);
       return new GenericData.Fixed(schema, bytes);
-    case STRING:  return randomString(random, 40);
-    case BYTES:   return randomBytes(random, 40);
+    case STRING:  return TestUtil.randomString(random);
+    case BYTES:   return TestUtil.randomBytes(random);
     case INT:     return random.nextInt();
     case LONG:    return random.nextLong();
     case FLOAT:   return random.nextFloat();
@@ -105,21 +101,6 @@ public class RandomData implements Iterable<Object> {
     case NULL:    return null;
     default: throw new RuntimeException("Unknown type: "+schema);
     }
-  }
-
-  private static String randomString(Random rand, int maxLength) {
-    int length = rand.nextInt(maxLength);
-    StringBuilder buffer = new StringBuilder(length);
-    for (int i = 0; i < length; i++)
-      buffer.append((char)('a'+rand.nextInt('z'-'a')));
-    return buffer.toString();
-  }
-
-  private static ByteBuffer randomBytes(Random rand, int maxLength) {
-    ByteBuffer bytes = ByteBuffer.allocate(rand.nextInt(maxLength));
-    bytes.limit(bytes.capacity());
-    rand.nextBytes(bytes.array());
-    return bytes;
   }
 
   public static void main(String[] args) throws Exception {

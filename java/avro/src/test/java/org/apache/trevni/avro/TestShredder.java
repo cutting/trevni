@@ -33,7 +33,6 @@ public class TestShredder {
 
   private static final int COUNT = 100;
   private static final File FILE = new File("target", "test.trv");
-  private static final long SEED = System.currentTimeMillis();
 
   @Test public void testPrimitive() throws Exception {
     check(Schema.create(Schema.Type.INT),
@@ -183,7 +182,7 @@ public class TestShredder {
     AvroColumnWriter<Object> writer =
       new AvroColumnWriter<Object>(schema, new ColumnFileMetaData());
     int count = 0;
-    for (Object datum : new RandomData(schema, COUNT, SEED)) {
+    for (Object datum : new RandomData(schema, COUNT)) {
       //System.out.println("datum="+datum);
       writer.write(datum);
     }
@@ -193,7 +192,7 @@ public class TestShredder {
   private void checkRead(Schema schema) throws IOException {
     AvroColumnReader<Object> reader =
       new AvroColumnReader<Object>(new AvroColumnReader.Params(FILE));
-    for (Object expected : new RandomData(schema, COUNT, SEED))
+    for (Object expected : new RandomData(schema, COUNT))
       assertEquals(expected, reader.next());
     reader.close();
   }
