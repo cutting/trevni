@@ -22,6 +22,8 @@ import java.io.Closeable;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /** Reads data from a column file. */
@@ -59,6 +61,15 @@ public class ColumnFileReader implements Closeable {
     ColumnMetaData[] result = new ColumnMetaData[columnCount];
     for (int i = 0; i < columnCount; i++)
       result[i] = columns[i].metaData;
+    return result;
+  }
+
+  /** Return root columns' metadata.  Roots are columns that have no parent. */
+  public List<ColumnMetaData> getRoots() {
+    List<ColumnMetaData> result = new ArrayList<ColumnMetaData>();
+    for (int i = 0; i < columnCount; i++)
+      if (columns[i].metaData.getParent() == null)
+        result.add(columns[i].metaData);
     return result;
   }
 

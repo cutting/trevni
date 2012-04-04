@@ -34,14 +34,6 @@
   <description>Trevni command line tools.</description>
 
   <build>
-    <resources>
-      <resource>
-        <includes>
-          <include>NOTICE.txt</include>
-        </includes>
-        <directory>../../</directory>
-      </resource>
-    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -85,13 +77,13 @@
 
   <dependencies>
     <dependency>
-      <groupId>org.apache.avro</groupId>
-      <artifactId>avro</artifactId>
-      <version>${avro-version}</version>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>trevni-core</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.avro</groupId>
-      <artifactId>avro-mapred</artifactId>
+      <artifactId>avro</artifactId>
       <version>${avro-version}</version>
     </dependency>
     <dependency>

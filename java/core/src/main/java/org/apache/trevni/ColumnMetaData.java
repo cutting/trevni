@@ -18,6 +18,8 @@
 package org.apache.trevni;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.ArrayList;
 
 /** Metadata for a column. */
 public class ColumnMetaData extends MetaData<ColumnMetaData> {
@@ -34,6 +36,7 @@ public class ColumnMetaData extends MetaData<ColumnMetaData> {
   private boolean values;
   private ColumnMetaData parent;
   private boolean isArray;
+  private List<ColumnMetaData> children = new ArrayList<ColumnMetaData>(0);
 
   private ColumnMetaData() {}                     // non-public ctor
 
@@ -53,6 +56,9 @@ public class ColumnMetaData extends MetaData<ColumnMetaData> {
 
   /** Return this column's parent or null. */
   public ColumnMetaData getParent() { return parent; }
+
+  /** Return this column's parent or null. */
+  public List<ColumnMetaData> getChildren() { return children; }
 
   /** Return true if this column is an array. */
   public boolean isArray() { return isArray; }
@@ -75,6 +81,7 @@ public class ColumnMetaData extends MetaData<ColumnMetaData> {
     if (values)
       throw new TrevniRuntimeException("Array column cannot have index: "+this);
     this.parent = parent;
+    parent.children.add(this);
     return setReserved(PARENT_KEY, parent.getName());
   }
 
@@ -100,7 +107,7 @@ public class ColumnMetaData extends MetaData<ColumnMetaData> {
 
     String parentName = result.getString(PARENT_KEY);
     if (parentName != null)
-      result.parent = file.getColumnMetaData(parentName);
+      result.setParent(file.getColumnMetaData(parentName));
 
     return result;
   }

@@ -77,28 +77,30 @@ class AvroColumnator {
       throw new TrevniRuntimeException("Can't shred maps yet: "+s);
     case RECORD:
       for (Field field : s.getFields())           // flatten fields to columns
-        columnize(p(path, field.name()), field.schema(), parent, isArray);
+        columnize(p(path, field.name(), "."), field.schema(), parent, isArray);
       break;
     case ARRAY: 
-      addArrayColumn(p(path, s.getElementType()), s.getElementType(), parent);
+      if (!isSimple(s.getElementType()))
+        path = p(path, s.getElementType(), "#");
+      addArrayColumn(path, s.getElementType(), parent);
       break;
     case UNION:
       for (Schema branch : s.getTypes())          // array per branch
-        addArrayColumn(p(path, branch), branch, parent);
+        addArrayColumn(p(path, branch, "/"), branch, parent);
       break;
     default:
       throw new TrevniRuntimeException("Unknown schema: "+s);
     }
   }
 
-  private String p(String parent, Schema child) {
+  private String p(String parent, Schema child, String sep) {
     if (child.getType() == Schema.Type.UNION)
       return parent;
-    return p(parent, child.getFullName());
+    return p(parent, child.getFullName(), sep);
   }
 
-  private String p(String parent, String child) {
-    return parent == null ? child : parent + "#" + child;
+  private String p(String parent, String child, String sep) {
+    return parent == null ? child : parent + sep + child;
   }
 
   private ColumnMetaData addColumn(String path, ValueType type,

@@ -35,7 +35,7 @@ public class Main {
   Main() {
     tools = new TreeMap<String, Tool>();
     for (Tool tool : new Tool[] {
-        // new ToTextTool(),
+        new ToJsonTool()
         }) {
       Tool prev = tools.put(tool.getName(), tool);
       if (prev != null) {
@@ -59,24 +59,17 @@ public class Main {
       Tool tool = tools.get(args[0]);
       if (tool != null) {
         return tool.run(
-          System.in, System.out, System.err, Arrays.asList(args).subList(1, args.length));
+          System.in, System.out, System.err,
+          Arrays.asList(args).subList(1, args.length));
       }
     }
-    printStream(Main.class.getClassLoader().getResourceAsStream("NOTICE.txt"));
-    System.err.println("----------------");
-
     System.err.println("Available tools:");
     for (Tool k : tools.values()) {
-      System.err.printf("%" + maxLen + "s  %s\n", k.getName(), k.getShortDescription());
+      System.err.printf("%" + maxLen + "s  %s\n", k.getName(),
+                        k.getShortDescription());
     }
 
     return 1;
-  }
-
-  private static void printStream(InputStream in) throws Exception {
-    byte[] buffer = new byte[1024];
-    for (int i = in.read(buffer); i != -1; i = in.read(buffer))
-      System.err.write(buffer, 0, i);
   }
 
 }
