@@ -95,7 +95,7 @@ public class ToJsonTool implements Tool {
   }
 
   private void valueToJson(ColumnMetaData column) throws IOException {
-    generator.writeFieldName(shortColumnName(column.getName()));
+    generator.writeFieldName(shortColumnName(column));
     ColumnValues in = values.get(column.getName());
     if (!column.isArray()) {
       primitiveToJson(column, in.nextValue());
@@ -149,15 +149,14 @@ public class ToJsonTool implements Tool {
     }
   }
 
-  private String shortColumnName(String name) {
-    int lastHash = name.lastIndexOf('#');
-    if (lastHash != -1)
-      name = name.substring(lastHash+1, name.length());
-
-    int lastDot = name.lastIndexOf('.');
-    if (lastDot != -1)
-      name = name.substring(lastDot+1, name.length());
-
+  // trim off portion of name shared with parent
+  private String shortColumnName(ColumnMetaData column) {
+    String name = column.getName();
+    ColumnMetaData parent = column.getParent();
+    if (parent != null && name.startsWith(parent.getName()))
+      name = name.substring(parent.getName().length());
+    if (!Character.isLetterOrDigit(name.charAt(0)))
+      name = name.substring(1);
     return name;
   }
 

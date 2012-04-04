@@ -77,11 +77,10 @@ class AvroColumnator {
       throw new TrevniRuntimeException("Can't shred maps yet: "+s);
     case RECORD:
       for (Field field : s.getFields())           // flatten fields to columns
-        columnize(p(path, field.name(), "."), field.schema(), parent, isArray);
+        columnize(p(path, field.name(), "#"), field.schema(), parent, isArray);
       break;
     case ARRAY: 
-      if (!isSimple(s.getElementType()))
-        path = p(path, s.getElementType(), "#");
+      path = path == null ? "[]" : path+"[]";
       addArrayColumn(path, s.getElementType(), parent);
       break;
     case UNION:
