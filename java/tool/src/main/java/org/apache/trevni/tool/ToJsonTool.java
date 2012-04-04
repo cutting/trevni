@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
+import org.apache.trevni.Input;
 import org.apache.trevni.ColumnFileReader;
 import org.apache.trevni.ColumnMetaData;
 import org.apache.trevni.ColumnValues;
@@ -34,7 +35,10 @@ import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.util.MinimalPrettyPrinter;
 
-/** Reads a Trevni file and render it as JSON.*/
+/** Tool to read Trevni files and print them as JSON.
+ * This can read any Trevni file.  Nested structure is reconstructed from the
+ * columns rather than any schema information.
+ */
 public class ToJsonTool implements Tool {
   static final JsonFactory FACTORY = new JsonFactory();
 
@@ -55,25 +59,36 @@ public class ToJsonTool implements Tool {
   @Override
   public int run(InputStream stdin, PrintStream out, PrintStream err,
                  List<String> args) throws Exception {
+    String filename;
     boolean pretty = false;
-    if (args.size() == 2 && "-pretty".equals(args.get(1)))
+    if (args.size() == 2 && "-pretty".equals(args.get(0))) {
       pretty = true;
-    else if (args.size() != 1) {
-      err.println("Usage: input [-pretty]");
+      filename = args.get(1);
+    } else if (args.size() == 1) {
+      filename = args.get(0);
+    } else {
+      err.println("Usage: [-pretty] input");
       return 1;
     }
+    
+    toJson(Util.input(filename), out, pretty);
 
+    return 0;
+  }
+
+  /** Read a Trevni file and print each row as a JSON object. */
+  public void toJson(Input input, PrintStream out, boolean pretty)
+    throws IOException {
     this.generator = FACTORY.createJsonGenerator(out, JsonEncoding.UTF8);
     if (pretty) {
       generator.useDefaultPrettyPrinter();
-    } else {
-      // ensure newline separation
+    } else {                                      // ensure newline separation
       MinimalPrettyPrinter pp = new MinimalPrettyPrinter();
       pp.setRootValueSeparator(System.getProperty("line.separator"));
       generator.setPrettyPrinter(pp);
     }
 
-    this.reader = new ColumnFileReader(Util.input(args.get(0)));
+    this.reader = new ColumnFileReader(input);
 
     this.values = new HashMap<String,ColumnValues>();
     for (ColumnMetaData c : reader.getColumnMetaData())
@@ -91,9 +106,8 @@ public class ToJsonTool implements Tool {
     generator.flush();
     out.println();
     reader.close();
-    return 0;
   }
-
+  
   private void valueToJson(ColumnMetaData column) throws IOException {
     generator.writeFieldName(shortColumnName(column));
     ColumnValues in = values.get(column.getName());
