@@ -181,16 +181,16 @@ public class AvroColumnReader<D>
   }
 
   private Object nextValue(Schema s, int column) throws IOException {
-    Object value = values[column].nextValue();
+    Object v = values[column].nextValue();
     
     switch (s.getType()) {
     case ENUM:
-      value = GenericData.EnumSymbol(s, s.getEnumSymbols().get((Integer)value));
+      return new GenericData.EnumSymbol(s, s.getEnumSymbols().get((Integer)v));
     case FIXED:
-      value = GenericData.Fixed(s, ((ByteBuffer)value).array());
+      return new GenericData.Fixed(s, ((ByteBuffer)v).array());
     }
 
-    return value;
+    return v;
   }
 
   @Override
