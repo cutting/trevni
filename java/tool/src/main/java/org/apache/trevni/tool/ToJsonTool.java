@@ -22,8 +22,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 
 import org.apache.trevni.Input;
 import org.apache.trevni.ColumnFileReader;
@@ -44,7 +42,8 @@ public class ToJsonTool implements Tool {
 
   private JsonGenerator generator;
   private ColumnFileReader reader;
-  private Map<String,ColumnValues> values;
+  private ColumnValues[] values;
+  private String[] shortNames;
 
   @Override
   public String getName() {
@@ -90,14 +89,18 @@ public class ToJsonTool implements Tool {
 
     this.reader = new ColumnFileReader(input);
 
-    this.values = new HashMap<String,ColumnValues>();
-    for (ColumnMetaData c : reader.getColumnMetaData())
-      values.put(c.getName(), reader.getValues(c.getName()));
+    int columnCount = (int)reader.getColumnCount();
+    this.values = new ColumnValues[columnCount];
+    this.shortNames = new String[columnCount];
+    for (int i = 0; i < columnCount; i++) {
+      values[i] = reader.getValues(i);
+      shortNames[i] = shortName(reader.getColumnMetaData(i));
+    }
 
     List<ColumnMetaData> roots = reader.getRoots();
     for (long row = 0; row < reader.getRowCount(); row++) {
-      for (ColumnValues in : values.values())
-        in.startRow();
+      for (ColumnValues v : values)
+        v.startRow();
       generator.writeStartObject();
       for (ColumnMetaData root : roots)
         valueToJson(root);
@@ -109,8 +112,8 @@ public class ToJsonTool implements Tool {
   }
   
   private void valueToJson(ColumnMetaData column) throws IOException {
-    generator.writeFieldName(shortColumnName(column));
-    ColumnValues in = values.get(column.getName());
+    generator.writeFieldName(shortNames[column.getNumber()]);
+    ColumnValues in = values[column.getNumber()];
     if (!column.isArray()) {
       primitiveToJson(column, in.nextValue());
     } else {
@@ -164,7 +167,7 @@ public class ToJsonTool implements Tool {
   }
 
   // trim off portion of name shared with parent
-  private String shortColumnName(ColumnMetaData column) {
+  private String shortName(ColumnMetaData column) {
     String name = column.getName();
     ColumnMetaData parent = column.getParent();
     if (parent != null && name.startsWith(parent.getName()))

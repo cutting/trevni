@@ -74,6 +74,11 @@ public class ColumnFileReader implements Closeable {
   }
 
   /** Return a column's metadata. */
+  public ColumnMetaData getColumnMetaData(int number) {
+    return columns[number].metaData;
+  }
+
+  /** Return a column's metadata. */
   public ColumnMetaData getColumnMetaData(String name) {
     return getColumn(name).metaData;
   }
@@ -116,6 +121,7 @@ public class ColumnFileReader implements Closeable {
       meta.setDefaults(this.metaData);
       ColumnDescriptor column = new ColumnDescriptor(file, meta);
       columns[i] = column;
+      meta.setNumber(i);
       columnsByName.put(meta.getName(), column);
     }
   }

@@ -36,7 +36,10 @@ public class ColumnMetaData extends MetaData<ColumnMetaData> {
   private boolean values;
   private ColumnMetaData parent;
   private boolean isArray;
-  private List<ColumnMetaData> children = new ArrayList<ColumnMetaData>(0);
+
+  private transient List<ColumnMetaData> children =
+    new ArrayList<ColumnMetaData>(0);
+  private transient int number = -1;
 
   private ColumnMetaData() {}                     // non-public ctor
 
@@ -63,9 +66,13 @@ public class ColumnMetaData extends MetaData<ColumnMetaData> {
   /** Return true if this column is an array. */
   public boolean isArray() { return isArray; }
 
-  /** Set whether this column has an index of blocks by value.
-   * This only makes sense for sorted columns and permits one to seek into a
-   * column by value.
+  /** Return this column's number in a file. */
+  public int getNumber() { return number; }
+
+  void setNumber(int number) { this.number = number; }
+
+  /** Set whether this column has an index of blocks by value.  This only makes
+   * sense for sorted columns and permits one to seek into a column by value.
    */
   public ColumnMetaData hasIndexValues(boolean values) {
     if (isArray)
