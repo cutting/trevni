@@ -21,6 +21,7 @@ package org.apache.trevni.avro;
 import java.io.IOException;
 import java.io.Closeable;
 import java.io.File;
+import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.HashMap;
@@ -138,7 +139,7 @@ public class AvroColumnReader<D>
 
   private Object read(Schema s) throws IOException {
     if (isSimple(s))
-      return values[column++].nextValue();
+      return nextValue(s, column++);
 
     switch (s.getType()) {
     case MAP: 
@@ -154,7 +155,7 @@ public class AvroColumnReader<D>
       int startColumn = column;
       for (int i = 0; i < length; i++) {
         this.column = startColumn;
-        Object value = values[column++].nextValue();
+        Object value = nextValue(s, column++);
         if (!isSimple(s.getElementType()))
           value = read(s.getElementType());
         elements.add(value);
@@ -165,7 +166,7 @@ public class AvroColumnReader<D>
       Object value = null;
       for (Schema branch : s.getTypes()) {
         if (values[column].nextLength() == 1) {
-          value = values[column].nextValue();
+          value = nextValue(s, column);
           column++;
           if (!isSimple(branch))
             value = read(branch);
@@ -177,6 +178,19 @@ public class AvroColumnReader<D>
     default:
       throw new TrevniRuntimeException("Unknown schema: "+s);
     }
+  }
+
+  private Object nextValue(Schema s, int column) throws IOException {
+    Object value = values[column].nextValue();
+    
+    switch (s.getType()) {
+    case ENUM:
+      value = GenericData.EnumSymbol(s, s.getEnumSymbols().get((Integer)value));
+    case FIXED:
+      value = GenericData.Fixed(s, ((ByteBuffer)value).array());
+    }
+
+    return value;
   }
 
   @Override

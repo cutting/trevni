@@ -19,6 +19,7 @@ package org.apache.trevni.avro;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.trevni.ValueType;
 import org.apache.trevni.ColumnMetaData;
@@ -34,9 +35,29 @@ public class TestShredder {
   private static final int COUNT = 100;
   private static final File FILE = new File("target", "test.trv");
 
-  @Test public void testPrimitive() throws Exception {
+  @Test public void testPrimitives() throws Exception {
+    check(Schema.create(Schema.Type.NULL),
+          new ColumnMetaData("null", ValueType.NULL));
+
     check(Schema.create(Schema.Type.INT),
           new ColumnMetaData("int", ValueType.INT));
+    check(Schema.create(Schema.Type.LONG),
+          new ColumnMetaData("long", ValueType.LONG));
+
+    check(Schema.create(Schema.Type.FLOAT),
+          new ColumnMetaData("float", ValueType.FLOAT));
+    check(Schema.create(Schema.Type.DOUBLE),
+          new ColumnMetaData("double", ValueType.DOUBLE));
+
+    check(Schema.create(Schema.Type.BYTES),
+          new ColumnMetaData("bytes", ValueType.BYTES));
+    check(Schema.create(Schema.Type.STRING),
+          new ColumnMetaData("string", ValueType.STRING));
+
+    check(Schema.createEnum("E", null, null, Arrays.asList("X","Y","Z")),
+          new ColumnMetaData("E", ValueType.INT));
+    check(Schema.createFixed("F", null, null, 5),
+          new ColumnMetaData("F", ValueType.BYTES));
   }
 
   private static final String SIMPLE_RECORD =

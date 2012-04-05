@@ -29,6 +29,7 @@ import org.apache.trevni.TrevniRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.util.Utf8;
 
 import static org.apache.trevni.avro.AvroColumnator.isSimple;
@@ -78,7 +79,7 @@ public class AvroColumnWriter<D> {
   
   private int write(Object o, Schema s, int column) throws IOException {
     if (isSimple(s)) {
-      writeValue(o, column);
+      writeValue(o, s, column);
       return column+1;
     }
     switch (s.getType()) {
@@ -93,7 +94,7 @@ public class AvroColumnWriter<D> {
       writer.writeLength(elements.size(), column);
       if (isSimple(s.getElementType())) {         // optimize simple arrays
         for (Object element : elements)
-          writeValue(element, column);
+          writeValue(element, s.getElementType(), column);
         return column+1;
       }
       for (Object element : elements) {
@@ -113,7 +114,7 @@ public class AvroColumnWriter<D> {
         } else {
           writer.writeLength(1, column);
           if (isSimple(branch)) {
-            writeValue(o, column++);
+            writeValue(o, branch, column++);
           } else {
             writer.writeValue(null, column);
             column = write(o, branch, column+1);
@@ -126,9 +127,24 @@ public class AvroColumnWriter<D> {
     }
   }
 
-  private void writeValue(Object value, int column) throws IOException {
-    if (value instanceof Utf8)                    // convert to String
-      value = value.toString();
+  private void writeValue(Object value, Schema s, int column)
+    throws IOException {
+    
+    switch (s.getType()) {
+    case STRING:
+      if (value instanceof Utf8)                    // convert Utf8 to String
+        value = value.toString();
+      break;
+    case ENUM:
+      if (value instanceof Enum)
+        value = ((Enum)value).ordinal();
+      else 
+        value = s.getEnumOrdinal(value.toString());
+      break;
+    case FIXED:
+      value = ((GenericFixed)value).bytes();
+      break;
+    }
     writer.writeValue(value, column);
   }
 

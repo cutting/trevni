@@ -1,5 +1,6 @@
 Arrays
- - implement Avro maps & enums
+ - implement Avro maps
+ - add tests for ToJson tool
 
 Integration with other tools:
 - implement Protobuf record shredder
