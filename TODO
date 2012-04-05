@@ -1,5 +1,5 @@
 Arrays
- - implement maps
+ - implement Avro maps & enums
 
 Integration with other tools:
 - implement Protobuf record shredder
