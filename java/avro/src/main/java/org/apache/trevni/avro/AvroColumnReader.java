@@ -141,9 +141,20 @@ public class AvroColumnReader<D>
     if (isSimple(s))
       return nextValue(s, column++);
 
+    final int startColumn = column;
+
     switch (s.getType()) {
     case MAP: 
-      throw new TrevniRuntimeException("Unknown schema: "+s);
+      int size = values[column].nextLength();
+      Map map = (Map)new HashMap(size);
+      for (int i = 0; i < size; i++) {
+        this.column = startColumn;
+        values[column++].nextValue();                      // null in parent
+        String key = (String)values[column++].nextValue(); // key
+        map.put(key, read(s.getValueType()));              // value
+      }
+      column = startColumn + arrayWidths[startColumn];
+      return map;
     case RECORD: 
       Object record = model.newRecord(null, s);
       for (Field f : s.getFields())
@@ -152,7 +163,6 @@ public class AvroColumnReader<D>
     case ARRAY: 
       int length = values[column].nextLength();
       List elements = (List)new GenericData.Array(length, s);
-      int startColumn = column;
       for (int i = 0; i < length; i++) {
         this.column = startColumn;
         Object value = nextValue(s, column++);

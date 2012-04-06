@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.File;
 import java.io.OutputStream;
 import java.util.Collection;
+import java.util.Map;
 
 import org.apache.trevni.ColumnFileMetaData;
 import org.apache.trevni.ColumnFileWriter;
@@ -84,7 +85,15 @@ public class AvroColumnWriter<D> {
     }
     switch (s.getType()) {
     case MAP: 
-      throw new TrevniRuntimeException("Unknown schema: "+s);
+      Map<?,?> map = (Map)o;
+      writer.writeLength(map.size(), column);
+      for (Map.Entry e : map.entrySet()) {
+        writer.writeValue(null, column);
+        writer.writeValue(e.getKey(), column+1);
+        int c = write(e.getValue(), s.getValueType(), column+2);
+        assert(c == column+arrayWidths[column]);
+      }
+      return column+arrayWidths[column];
     case RECORD: 
       for (Field f : s.getFields())
         column = write(model.getField(o,f.name(),f.pos()), f.schema(), column);
