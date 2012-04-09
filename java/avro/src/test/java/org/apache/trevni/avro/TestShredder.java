@@ -190,6 +190,25 @@ public class TestShredder {
           new ColumnMetaData("a/array[]#y", ValueType.STRING).setParent(r));
   }
 
+  @Test public void testSimpleMap() throws Exception {
+    String s = "{\"type\":\"map\",\"values\":\"long\"}";
+    ColumnMetaData p = new ColumnMetaData(">", ValueType.NULL).isArray(true);
+    check(Schema.parse(s),
+          p,
+          new ColumnMetaData(">key", ValueType.STRING).setParent(p),
+          new ColumnMetaData(">value", ValueType.LONG).setParent(p));
+  }
+
+  @Test public void testMap() throws Exception {
+    String s = "{\"type\":\"map\",\"values\":"+SIMPLE_RECORD+"}";
+    ColumnMetaData p = new ColumnMetaData(">", ValueType.NULL).isArray(true);
+    check(Schema.parse(s),
+          p,
+          new ColumnMetaData(">key", ValueType.STRING).setParent(p),
+          new ColumnMetaData(">value#x", ValueType.INT).setParent(p),
+          new ColumnMetaData(">value#y", ValueType.STRING).setParent(p));
+  }
+
   private void check(Schema s, ColumnMetaData... expected) throws Exception {
     ColumnMetaData[] shredded = new AvroColumnator(s).getColumns();
     assertEquals(expected.length, shredded.length);

@@ -75,9 +75,11 @@ class AvroColumnator {
     switch (s.getType()) {
     case MAP: 
       path = path == null ? ">" : path+">";
+      int start = columns.size();
       ColumnMetaData p = addColumn(path, ValueType.NULL, parent, true);
-      addColumn(p(path,"key", ">"), ValueType.STRING, p, false);
-      columnize(p(path,"value", ">"), s.getValueType(), p, false);
+      addColumn(p(path,"key", ""), ValueType.STRING, p, false);
+      columnize(p(path,"value", ""), s.getValueType(), p, false);
+      arrayWidths.set(start, columns.size()-start); // fixup with actual width
       break;
     case RECORD:
       for (Field field : s.getFields())           // flatten fields to columns
