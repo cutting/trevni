@@ -110,7 +110,13 @@ public class TestShredder {
           new ColumnMetaData("string", ValueType.STRING).isArray(true));
   }
 
-  private static final String UNION = "[\"int\","+SIMPLE_RECORD+"]";
+  @Test public void testSimpleOptional() throws Exception {
+    String s = "[\"null\",\"string\"]";
+    check(Schema.parse(s),
+          new ColumnMetaData("string", ValueType.STRING).isArray(true));
+  }
+
+  private static final String UNION = "[\"null\",\"int\","+SIMPLE_RECORD+"]";
 
   @Test public void testUnion() throws Exception {
     ColumnMetaData p = new ColumnMetaData("R", ValueType.NULL).isArray(true);

@@ -117,6 +117,7 @@ public class AvroColumnWriter<D> {
       int i = 0;
       for (Schema branch : s.getTypes()) {
         boolean selected = i++ == b;
+        if (branch.getType() == Schema.Type.NULL) continue;
         if (!selected) {
           writer.writeLength(0, column);
           column+=arrayWidths[column];

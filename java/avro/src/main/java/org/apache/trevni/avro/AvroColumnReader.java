@@ -175,6 +175,7 @@ public class AvroColumnReader<D>
     case UNION:
       Object value = null;
       for (Schema branch : s.getTypes()) {
+        if (branch.getType() == Schema.Type.NULL) continue;
         if (values[column].nextLength() == 1) {
           value = nextValue(s, column);
           column++;

@@ -90,8 +90,9 @@ class AvroColumnator {
       addArrayColumn(path, s.getElementType(), parent);
       break;
     case UNION:
-      for (Schema branch : s.getTypes())          // array per branch
-        addArrayColumn(p(path, branch, "/"), branch, parent);
+      for (Schema branch : s.getTypes())          // array per non-null branch
+        if (branch.getType() != Schema.Type.NULL)
+          addArrayColumn(p(path, branch, "/"), branch, parent);
       break;
     default:
       throw new TrevniRuntimeException("Unknown schema: "+s);
