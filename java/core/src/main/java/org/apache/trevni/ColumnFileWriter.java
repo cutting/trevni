@@ -37,6 +37,7 @@ public class ColumnFileWriter {
 
   private long rowCount;
   private int columnCount;
+  private long size;
 
   /** Construct given metadata for each column in the file. */
   public ColumnFileWriter(ColumnFileMetaData fileMeta,
@@ -49,8 +50,9 @@ public class ColumnFileWriter {
       ColumnMetaData c = columnMeta[i];
       c.setDefaults(metaData);
       columns[i] = c.isArray()
-        ? new ArrayColumnOutputBuffer(c)
-        : new ColumnOutputBuffer(c);
+        ? new ArrayColumnOutputBuffer(this, c)
+        : new ColumnOutputBuffer(this, c);
+      size += OutputBuffer.BLOCK_SIZE;            // over-estimate
     }
   }
 
@@ -67,6 +69,12 @@ public class ColumnFileWriter {
       seen.add(name);
     }          
   }
+
+  void incrementSize(int n) { size += n; }
+
+  /** Return the approximate size of the file that will be written.
+   * Tries to over-estimate. */
+  public long sizeEstimate() { return size; }
 
   /** Return this file's metadata. */
   public ColumnFileMetaData getMetaData() { return metaData; }

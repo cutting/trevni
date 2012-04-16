@@ -23,8 +23,9 @@ import java.io.IOException;
 class ArrayColumnOutputBuffer extends ColumnOutputBuffer {
   private int length;                             // remaining in current array
 
-  public ArrayColumnOutputBuffer(ColumnMetaData meta) throws IOException {
-    super(meta);
+  public ArrayColumnOutputBuffer(ColumnFileWriter writer, ColumnMetaData meta)
+    throws IOException {
+    super(writer, meta);
     assert getMeta().isArray() || getMeta().getParent() != null;
     assert !getMeta().hasIndexValues();
   }

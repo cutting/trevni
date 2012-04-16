@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 class ColumnOutputBuffer {
+  private ColumnFileWriter writer;
   private ColumnMetaData meta;
   private Codec codec;
   private Checksum checksum;
@@ -32,8 +33,11 @@ class ColumnOutputBuffer {
   private List<byte[]> blockData;
   private List<byte[]> firstValues;
   private int rowCount;
+  private long size = 4;                          // room for block count
 
-  public ColumnOutputBuffer(ColumnMetaData meta) throws IOException {
+  public ColumnOutputBuffer(ColumnFileWriter writer, ColumnMetaData meta)
+    throws IOException {
+    this.writer = writer;
     this.meta = meta;
     this.codec = Codec.get(meta);
     this.checksum = Checksum.get(meta);
@@ -80,21 +84,22 @@ class ColumnOutputBuffer {
     data.put(checksum.compute(raw));
     blockData.add(data.array());
 
+    int sizeIncrement =
+      (4*3)                                       // descriptor
+      + (firstValues != null                      // firstValue
+         ? firstValues.get(firstValues.size()-1).length
+         : 0)
+      + data.position();                         // data
+    
+    writer.incrementSize(sizeIncrement);
+    size += sizeIncrement;                         
+
     buffer = new OutputBuffer();
     rowCount = 0;
   }
 
   public long size() throws IOException {
     flushBuffer();
-    long size = 4;                                // count of blocks
-    size += 4 * 3 * blockDescriptors.size();      // descriptors
-
-    if (meta.hasIndexValues())                    // first values
-      for (byte[] value : firstValues)
-        size += value.length;
-
-    for (byte[] data : blockData)
-      size += data.length;                        // data
     return size;
   }
 

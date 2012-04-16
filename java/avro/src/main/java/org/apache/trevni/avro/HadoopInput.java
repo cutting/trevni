@@ -16,9 +16,8 @@
  * limitations under the License.
  */
 
-package org.apache.trevni.tool;
+package org.apache.trevni.avro;
 
-import java.io.Closeable;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;

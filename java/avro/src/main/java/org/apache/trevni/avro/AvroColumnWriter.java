@@ -60,6 +60,10 @@ public class AvroColumnWriter<D> {
     this.model = model;
   }
 
+  /** Return the approximate size of the file that will be written.
+   * Tries to over-estimate. */
+  public long sizeEstimate() { return writer.sizeEstimate(); }
+
   /** Write all rows added to the named output stream. */
   public void writeTo(OutputStream out) throws IOException {
     writer.writeTo(out);

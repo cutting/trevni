@@ -30,7 +30,7 @@ public class MetaData<T extends MetaData> extends LinkedHashMap<String,byte[]> {
   static final String CODEC_KEY = RESERVED_KEY_PREFIX + "codec";
   static final String CHECKSUM_KEY = RESERVED_KEY_PREFIX + "checksum";
 
-  private static final Charset UTF8 = Charset.forName("UTF-8");
+  public static final Charset UTF8 = Charset.forName("UTF-8");
 
   private MetaData<?> defaults;
 
