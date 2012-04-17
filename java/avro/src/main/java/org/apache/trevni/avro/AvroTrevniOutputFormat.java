@@ -19,6 +19,7 @@
 package org.apache.trevni.avro;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Map;
 
 import org.apache.hadoop.io.NullWritable;
@@ -83,8 +84,12 @@ public class AvroTrevniOutputFormat <T>
         new AvroColumnWriter<T>(schema, meta, ReflectData.get());
     
       private void flush() throws IOException {
-        if (writer != null)
-          writer.writeTo(fs.create(new Path(dir, "part-"+(part++)+EXT)));
+        OutputStream out = fs.create(new Path(dir, "part-"+(part++)+EXT));
+        try {
+          writer.writeTo(out);
+        } finally {
+          out.close();
+        }
         writer = new AvroColumnWriter<T>(schema, meta, ReflectData.get());
       }
 
