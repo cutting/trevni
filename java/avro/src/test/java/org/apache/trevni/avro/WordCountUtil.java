@@ -51,7 +51,7 @@ import org.apache.avro.mapred.Pair;
 
 public class WordCountUtil {
 
-  static final File DIR = new File("target", "wc");
+  public static final File DIR = new File("target", "wc");
   public static final File LINES_FILE
     = new File(new File(DIR, "in"), "lines.avro");
   static final File COUNTS_FILE

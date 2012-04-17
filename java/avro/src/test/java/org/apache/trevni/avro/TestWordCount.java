@@ -33,8 +33,10 @@ import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
+import org.apache.hadoop.mapred.lib.NullOutputFormat;
 import org.apache.hadoop.mapred.Reporter;
 
+import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.mapred.AvroJob;
 import org.apache.avro.mapred.Pair;
@@ -45,6 +47,8 @@ import org.apache.avro.mapred.AvroCollector;
 import org.apache.avro.Schema;
 
 import org.junit.Test;
+
+import static org.apache.trevni.avro.WordCountUtil.DIR;
 
 public class TestWordCount {
 
@@ -72,17 +76,16 @@ public class TestWordCount {
   }    
 
   @Test public void runTestsInOrder() throws Exception {
-    testJob();
+    testOutputFormat();
+    testInputFormat();
   }
 
   private static final Schema STRING = Schema.create(Schema.Type.STRING);
   static { GenericData.setStringType(STRING, GenericData.StringType.String); }
   private static final Schema LONG = Schema.create(Schema.Type.LONG);
 
-  @SuppressWarnings("deprecation")
-  public void testJob() throws Exception {
+  public void testOutputFormat() throws Exception {
     JobConf job = new JobConf();
-    File dir = WordCountUtil.DIR;
     
     WordCountUtil.writeLinesFile();
     
@@ -93,8 +96,8 @@ public class TestWordCount {
     AvroJob.setCombinerClass(job, ReduceImpl.class);
     AvroJob.setReducerClass(job, ReduceImpl.class);
     
-    FileInputFormat.setInputPaths(job, new Path(dir + "/in"));
-    FileOutputFormat.setOutputPath(job, new Path(dir + "/out"));
+    FileInputFormat.setInputPaths(job, new Path(DIR + "/in"));
+    FileOutputFormat.setOutputPath(job, new Path(DIR + "/out"));
     FileOutputFormat.setCompressOutput(job, true);
     
     job.setOutputFormat(AvroTrevniOutputFormat.class);
@@ -103,5 +106,28 @@ public class TestWordCount {
     
     WordCountUtil.validateCountsFile();
   }
+
+  public void testInputFormat() throws Exception {
+    JobConf job = new JobConf();
+
+    Schema subSchema = Schema.parse("{\"type\":\"record\"," +
+                                    "\"name\":\"org.apache.avro.mapred.Pair\","+
+                                    "\"fields\": [ " + 
+                                    "{\"name\":\"value\", \"type\":\"long\"}" + 
+                                    "]}");
+    AvroJob.setInputSchema(job, subSchema);
+    FileInputFormat.setInputPaths(job, new Path(DIR + "/out"));
+    job.setInputFormat(AvroTrevniInputFormat.class);
+
+    job.setNumReduceTasks(0);                     // map-only
+
+    // mapper is default, identity
+    // FIXME: add a mapper that verifies data
+
+    job.setOutputFormat(NullOutputFormat.class);  // ignore output
+
+    JobClient.runJob(job);
+  }
+
 
 }

@@ -125,6 +125,9 @@ public class AvroColumnReader<D>
     return values[0].hasNext();
   }
 
+  /** Return the number of rows in this file. */
+  public long getRowCount() { return reader.getRowCount(); }
+
   @Override
   public D next() {
     try {
