@@ -47,6 +47,7 @@ import org.apache.avro.mapred.AvroCollector;
 import org.apache.avro.Schema;
 
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 import static org.apache.trevni.avro.WordCountUtil.DIR;
 
@@ -107,6 +108,15 @@ public class TestWordCount {
     WordCountUtil.validateCountsFile();
   }
 
+  private static long total;
+
+  public static class Counter extends AvroMapper<Pair<Void,Long>,Void> {
+    @Override public void map(Pair<Void,Long> p, AvroCollector<Void> collector,
+                              Reporter reporter) throws IOException {
+      total += p.value();
+    }
+  }
+  
   public void testInputFormat() throws Exception {
     JobConf job = new JobConf();
 
@@ -116,17 +126,16 @@ public class TestWordCount {
                                     "{\"name\":\"value\", \"type\":\"long\"}" + 
                                     "]}");
     AvroJob.setInputSchema(job, subSchema);
-    FileInputFormat.setInputPaths(job, new Path(DIR + "/out"));
+    AvroJob.setMapperClass(job, Counter.class);        
+    FileInputFormat.setInputPaths(job, new Path(DIR + "/out/*"));
     job.setInputFormat(AvroTrevniInputFormat.class);
 
     job.setNumReduceTasks(0);                     // map-only
-
-    // mapper is default, identity
-    // FIXME: add a mapper that verifies data
-
     job.setOutputFormat(NullOutputFormat.class);  // ignore output
 
+    total = 0;
     JobClient.runJob(job);
+    assertEquals(WordCountUtil.TOTAL, total);
   }
 
 

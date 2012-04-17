@@ -33,6 +33,7 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.RecordReader;
 
+import org.apache.avro.reflect.ReflectData;
 import org.apache.avro.mapred.AvroWrapper;
 
 /** An {@link org.apache.hadoop.mapred.InputFormat} for Trevni files */
@@ -63,7 +64,8 @@ public class AvroTrevniInputFormat<T>
     return new RecordReader<AvroWrapper<T>, NullWritable>() {
       private AvroColumnReader<T> reader =
         new AvroColumnReader<T>
-        (new AvroColumnReader.Params(new HadoopInput(file.getPath(), job)));
+        (new AvroColumnReader.Params(new HadoopInput(file.getPath(), job))
+         .setModel(ReflectData.get()));
       private float rows = reader.getRowCount();
       private long row;
 

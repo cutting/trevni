@@ -63,18 +63,21 @@ public class WordCountUtil {
     "the rain in spain falls mainly on the plains"
   };
 
-  public static final Map<String,Long> COUNTS =
-    new TreeMap<String,Long>();
+  public static final Map<String,Long> COUNTS = new TreeMap<String,Long>();
+  public static final long TOTAL;
   static {
+    long total = 0;
     for (String line : LINES) {
       StringTokenizer tokens = new StringTokenizer(line);
       while (tokens.hasMoreTokens()) {
         String word = tokens.nextToken();
         long count = COUNTS.containsKey(word) ? COUNTS.get(word) : 0L;
         count++;
+        total++;
         COUNTS.put(word, count);
       }
     }
+    TOTAL = total;
   }
 
   public static void writeLinesFile() throws IOException {
