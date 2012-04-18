@@ -3,3 +3,51 @@ Trevni is a column-oriented file-format.
 The Trevni specification is published at:
 
  http://cutting.github.com/trevni/spec.html
+
+Java Implementation
+
+Currently only a Java implementation exists.  Other implementations
+are encouraged.
+
+The Java implementation has a low-level API in the trevni-core module,
+with classes in the package org.apache.trevni.
+
+A higher-level API based on Avro is included in the trevni-avro
+module, with classes in the package org.apache.trevni.avro.  This
+includes a Hadoop OutputFormat and InputFormat.  One may write data
+for an Avro schema to a Trevni file using the output format in a
+MapReduce job.  Then one may efficiently read a subset of that Schema
+in subsequent MapReduce jobs.
+
+For example, if one has a large schema with many complex fields, but
+has a job that only requires access to a few of those fields, one can
+delete everything but the desired fields from the schema and use that
+subset schema to read the data.  Avro also supports subsetting, but it
+must scan through the skipped fields, while, as a column format,
+Trevni will only read data from disk for the fields that are desired.
+
+Some command-line tools for dumping Trevni files as JSON are provided
+in the trevni-tools module.
+
+Requirements
+  - Java 6 or higher, Java 7 preferred
+  - Maven
+  - Git
+
+To get the code:
+
+  git clone git://github.com/cutting/trevni.git
+
+To build the javadoc:
+
+  cd trevni
+  mvn test -DskipTests javadoc:aggregate
+  firefox target/site/apidocs/index.html
+
+To build and run the command-line tools:
+
+  cd trevni
+  mvn -DskipTests package
+  java -jar java/tool/target/trevni-tools-0.1-SNAPSHOT.jar
+
+The tests provide some examples of uses.

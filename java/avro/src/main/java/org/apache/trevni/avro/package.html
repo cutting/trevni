@@ -22,11 +22,11 @@ in Trevni column files.</body>
 
 <h2>Limitations</h2>
 
-The current implementation does not correctly handle all data types.
+The current implementation does not correctly handle all Avro data.
 In particular:
 
 <ul>
-  <li>The <b>map</b> type is not yet supported.</li>
+  <li>Recursive types are not supported.</li>
   <li>With ReflectData, fields of Java type <b>byte</b>, <b>short</b>
     and <b>char</b> are not supported.  Instead use int. </li>
   <li>With ReflectData, Java arrays are not supported.  Instead use

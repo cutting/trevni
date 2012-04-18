@@ -2,7 +2,6 @@ Arrays
  - add tests for ToJson tool
 
 Integration with other tools:
-- add Hadoop InputFormat & OutputFormat
 - implement Protobuf record shredder
 - implement Thrift record shredder
 
