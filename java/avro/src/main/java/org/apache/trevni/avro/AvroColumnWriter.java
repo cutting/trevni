@@ -35,8 +35,14 @@ import org.apache.avro.util.Utf8;
 
 import static org.apache.trevni.avro.AvroColumnator.isSimple;
 
-/** Write Avro records to a Trevni column file.  Each primitive type is written
- * to a separate column. */
+/** Write Avro records to a Trevni column file.
+ *
+ * <p>Each primitive type is written to a separate column.
+ *
+ * <p>Output is buffered until {@link #writeTo(OutputStream)} is called.  The
+ * {@link #sizeEstimate()} indicates both the amount of data buffered and the
+ * size of the file that will be written.
+ */
 public class AvroColumnWriter<D> {
   private Schema schema;
   private GenericData model;
@@ -60,8 +66,10 @@ public class AvroColumnWriter<D> {
     this.model = model;
   }
 
-  /** Return the approximate size of the file that will be written.
-   * Tries to over-estimate. */
+  /** Return the approximate size of the file that will be written.  Tries to
+   * slightly over-estimate.  Indicates both the size in memory of the buffered
+   * data as well as the size of the file that will be written by {@link
+   * #writeTo(OutputStream)}. */
   public long sizeEstimate() { return writer.sizeEstimate(); }
 
   /** Write all rows added to the named output stream. */

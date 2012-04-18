@@ -38,6 +38,7 @@ import org.apache.hadoop.mapred.Reporter;
 
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.mapred.AvroJob;
 import org.apache.avro.mapred.Pair;
 import org.apache.avro.mapred.AvroMapper;
@@ -110,10 +111,10 @@ public class TestWordCount {
 
   private static long total;
 
-  public static class Counter extends AvroMapper<Pair<Void,Long>,Void> {
-    @Override public void map(Pair<Void,Long> p, AvroCollector<Void> collector,
+  public static class Counter extends AvroMapper<GenericRecord,Void> {
+    @Override public void map(GenericRecord r, AvroCollector<Void> collector,
                               Reporter reporter) throws IOException {
-      total += p.value();
+      total += (Long)r.get("value");
     }
   }
   
@@ -121,7 +122,7 @@ public class TestWordCount {
     JobConf job = new JobConf();
 
     Schema subSchema = Schema.parse("{\"type\":\"record\"," +
-                                    "\"name\":\"org.apache.avro.mapred.Pair\","+
+                                    "\"name\":\"PairValue\","+
                                     "\"fields\": [ " + 
                                     "{\"name\":\"value\", \"type\":\"long\"}" + 
                                     "]}");

@@ -72,8 +72,10 @@ public class ColumnFileWriter {
 
   void incrementSize(int n) { size += n; }
 
-  /** Return the approximate size of the file that will be written.
-   * Tries to over-estimate. */
+  /** Return the approximate size of the file that will be written.  Tries to
+   * slightly over-estimate.  Indicates both the size in memory of the buffered
+   * data as well as the size of the file that will be written by {@link
+   * #writeTo(OutputStream)}. */
   public long sizeEstimate() { return size; }
 
   /** Return this file's metadata. */

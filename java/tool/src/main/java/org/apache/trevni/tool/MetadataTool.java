@@ -35,10 +35,7 @@ import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.util.MinimalPrettyPrinter;
 
-/** Tool to read Trevni files and print them as JSON.
- * This can read any Trevni file.  Nested structure is reconstructed from the
- * columns rather than any schema information.
- */
+/** Tool to print Trevni file metadata as JSON. */
 public class MetadataTool implements Tool {
   static final JsonFactory FACTORY = new JsonFactory();
 

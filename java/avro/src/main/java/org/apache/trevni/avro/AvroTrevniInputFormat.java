@@ -34,9 +34,14 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.RecordReader;
 
 import org.apache.avro.reflect.ReflectData;
+import org.apache.avro.mapred.AvroJob;
 import org.apache.avro.mapred.AvroWrapper;
 
-/** An {@link org.apache.hadoop.mapred.InputFormat} for Trevni files */
+/** An {@link org.apache.hadoop.mapred.InputFormat} for Trevni files.
+ *
+ * <p>A subset schema to be read may be specified with {@link
+ * AvroJob#setInputSchema(Schema)}.
+ */
 public class AvroTrevniInputFormat<T>
   extends FileInputFormat<AvroWrapper<T>, NullWritable> {
 
@@ -61,11 +66,15 @@ public class AvroTrevniInputFormat<T>
                     Reporter reporter) throws IOException {
     final FileSplit file = (FileSplit)split;
     reporter.setStatus(file.toString());
+
+    final AvroColumnReader.Params params =
+      new AvroColumnReader.Params(new HadoopInput(file.getPath(), job));
+    params.setModel(ReflectData.get());
+    if (job.get(AvroJob.INPUT_SCHEMA) != null)
+      params.setSchema(AvroJob.getInputSchema(job));
+
     return new RecordReader<AvroWrapper<T>, NullWritable>() {
-      private AvroColumnReader<T> reader =
-        new AvroColumnReader<T>
-        (new AvroColumnReader.Params(new HadoopInput(file.getPath(), job))
-         .setModel(ReflectData.get()));
+      private AvroColumnReader<T> reader = new AvroColumnReader<T>(params);
       private float rows = reader.getRowCount();
       private long row;
 

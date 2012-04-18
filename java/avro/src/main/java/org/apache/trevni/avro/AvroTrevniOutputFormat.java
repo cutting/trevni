@@ -40,7 +40,13 @@ import org.apache.trevni.MetaData;
 import org.apache.trevni.ColumnFileMetaData;
 
 /** An {@link org.apache.hadoop.mapred.OutputFormat} that writes Avro data to
- * Trevni files. */
+ * Trevni files.
+ *
+ * <p>Writes a directory of files per task, each comprising a single filesystem
+ * block.  To reduce the number of files, increase the default filesystem block
+ * size for the job.  Each task also requires enough memory to buffer a
+ * filesystem block.
+ */
 public class AvroTrevniOutputFormat <T>
   extends FileOutputFormat<AvroWrapper<T>, NullWritable> {
 
