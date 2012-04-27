@@ -107,6 +107,16 @@ public class TestIOBuffers {
       Assert.assertEquals(random.nextFloat(), in.readFloat(), 0);
   }
   
+  @Test public void testDouble() throws Exception {
+    OutputBuffer out = new OutputBuffer();
+    for (int i = 0; i < COUNT; i++)
+      out.writeDouble(Double.MIN_VALUE);
+    
+    InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
+    for (int i = 0; i < COUNT; i++)
+      Assert.assertEquals(Double.MIN_VALUE, in.readDouble(), 0.1);
+  }
+  
   @Test public void testBytes() throws Exception {
     Random random = TestUtil.createRandom();
     OutputBuffer out = new OutputBuffer();
