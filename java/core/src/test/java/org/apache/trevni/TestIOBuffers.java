@@ -114,7 +114,7 @@ public class TestIOBuffers {
     
     InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
     for (int i = 0; i < COUNT; i++)
-      Assert.assertEquals(Double.MIN_VALUE, in.readDouble(), 0.1);
+      Assert.assertEquals(Double.MIN_VALUE, in.readDouble(), 0);
   }
   
   @Test public void testBytes() throws Exception {
