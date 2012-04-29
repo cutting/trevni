@@ -97,10 +97,10 @@ class InputBuffer {
     case LONG:
       readLong();   break;
     case FIXED32:
-    case DOUBLE:
+    case FLOAT:
       skip(4);      break;
     case FIXED64:
-    case FLOAT:
+    case DOUBLE:
       skip(8);      break;
     case STRING:
     case BYTES:

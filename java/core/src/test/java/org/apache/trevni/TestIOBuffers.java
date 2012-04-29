@@ -94,7 +94,29 @@ public class TestIOBuffers {
     for (int i = 0; i < COUNT; i++)
       Assert.assertEquals(random.nextLong(), in.readFixed64());
   }
-
+  
+  @Test public void testFloat() throws Exception {
+    Random random = TestUtil.createRandom();
+    OutputBuffer out = new OutputBuffer();
+    for (int i = 0; i < COUNT; i++)
+      out.writeFloat(random.nextFloat());
+    
+    InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
+    random = TestUtil.createRandom();
+    for (int i = 0; i < COUNT; i++)
+      Assert.assertEquals(random.nextFloat(), in.readFloat(), 0);
+  }
+  
+  @Test public void testDouble() throws Exception {
+    OutputBuffer out = new OutputBuffer();
+    for (int i = 0; i < COUNT; i++)
+      out.writeDouble(Double.MIN_VALUE);
+    
+    InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
+    for (int i = 0; i < COUNT; i++)
+      Assert.assertEquals(Double.MIN_VALUE, in.readDouble(), 0);
+  }
+  
   @Test public void testBytes() throws Exception {
     Random random = TestUtil.createRandom();
     OutputBuffer out = new OutputBuffer();
@@ -118,5 +140,94 @@ public class TestIOBuffers {
     for (int i = 0; i < COUNT; i++)
       Assert.assertEquals(TestUtil.randomString(random), in.readString());
   }
-
+  @Test public void testSkipNull() throws Exception {
+    long sentinel = Long.MAX_VALUE;
+    OutputBuffer out = new OutputBuffer();
+    out.writeValue(null, ValueType.NULL);
+    out.writeLong(sentinel);
+    
+    InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
+    in.skipValue(ValueType.NULL);
+    Assert.assertEquals(sentinel, in.readLong());
+  }
+  @Test public void testSkipInt() throws Exception {
+    long sentinel = Long.MAX_VALUE;
+    OutputBuffer out = new OutputBuffer();
+    out.writeValue(Integer.MAX_VALUE, ValueType.INT);
+    out.writeLong(sentinel);
+    
+    InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
+    in.skipValue(ValueType.INT);
+    Assert.assertEquals(sentinel, in.readLong());
+  }
+  @Test public void testSkipLong() throws Exception {
+    long sentinel = Long.MAX_VALUE;
+    OutputBuffer out = new OutputBuffer();
+    out.writeValue(Long.MAX_VALUE, ValueType.LONG);
+    out.writeLong(sentinel);
+    
+    InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
+    in.skipValue(ValueType.LONG);
+    Assert.assertEquals(sentinel, in.readLong());
+  }
+  @Test public void testSkipFixed32() throws Exception {
+    long sentinel = Long.MAX_VALUE;
+    OutputBuffer out = new OutputBuffer();
+    out.writeValue(Integer.MAX_VALUE, ValueType.FIXED32);
+    out.writeLong(sentinel);
+    
+    InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
+    in.skipValue(ValueType.LONG);
+    Assert.assertEquals(sentinel, in.readLong());
+  }
+  @Test public void testSkipFixed64() throws Exception {
+    long sentinel = Long.MAX_VALUE;
+    OutputBuffer out = new OutputBuffer();
+    out.writeValue(Long.MAX_VALUE, ValueType.FIXED64);
+    out.writeLong(sentinel);
+    
+    InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
+    in.skipValue(ValueType.LONG);
+    Assert.assertEquals(sentinel, in.readLong());
+  }
+  @Test public void testSkipFloat() throws Exception {
+    long sentinel = Long.MAX_VALUE;
+    OutputBuffer out = new OutputBuffer();
+    out.writeValue(Float.MAX_VALUE, ValueType.FLOAT);
+    out.writeLong(sentinel);
+    
+    InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
+    in.skipValue(ValueType.FLOAT);
+    Assert.assertEquals(sentinel, in.readLong());
+  }
+  @Test public void testSkipDouble() throws Exception {
+    long sentinel = Long.MAX_VALUE;
+    OutputBuffer out = new OutputBuffer();
+    out.writeValue(Double.MAX_VALUE, ValueType.DOUBLE);
+    out.writeLong(sentinel);
+    
+    InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
+    in.skipValue(ValueType.DOUBLE);
+    Assert.assertEquals(sentinel, in.readLong());
+  }
+  @Test public void testSkipString() throws Exception {
+    long sentinel = Long.MAX_VALUE;
+    OutputBuffer out = new OutputBuffer();
+    out.writeValue("trevni", ValueType.STRING);
+    out.writeLong(sentinel);
+    
+    InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
+    in.skipValue(ValueType.STRING);
+    Assert.assertEquals(sentinel, in.readLong());
+  }
+  @Test public void testSkipBytes() throws Exception {
+    long sentinel = Long.MAX_VALUE;
+    OutputBuffer out = new OutputBuffer();
+    out.writeValue("trevni".getBytes(), ValueType.BYTES);
+    out.writeLong(sentinel);
+    
+    InputBuffer in = new InputBuffer(new InputBytes(out.toByteArray()));
+    in.skipValue(ValueType.BYTES);
+    Assert.assertEquals(sentinel, in.readLong());
+  }
 }
