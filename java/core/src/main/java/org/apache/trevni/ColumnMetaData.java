@@ -60,7 +60,7 @@ public class ColumnMetaData extends MetaData<ColumnMetaData> {
   /** Return this column's parent or null. */
   public ColumnMetaData getParent() { return parent; }
 
-  /** Return this column's parent or null. */
+  /** Return this column's children or null. */
   public List<ColumnMetaData> getChildren() { return children; }
 
   /** Return true if this column is an array. */
