@@ -269,7 +269,7 @@ whether subsequent bytes are present.  For example:
 cf.name=id      cf.type=int
 cf.name=date    cf.type=long
 cf.name=from    cf.type=string
-cf.name=from    cf.type=string  cf.array=true
+cf.name=to      cf.type=string  cf.array=true
 cf.name=content cf.type=string 
 ---
 
