@@ -167,7 +167,7 @@ whether subsequent bytes are present.  For example:
     UTF-8 encoded character data.
 
   For example, the three-character string "foo" would be encoded as
-  the <long> value 3 (encoded as hex 03) followed by the UTF-8
+  the <long> value 3 (encoded as hex 06) followed by the UTF-8
   encoding of 'f', 'o', and 'o' (the hex bytes 66 6f 6f): 06 66 6f 6f
 
 * Type Names
