@@ -446,7 +446,7 @@ Implementation Notes
 
   {CIF} {{{http://arxiv.org/pdf/1105.4252.pdf}<Column-Oriented Storage
   Techniques for MapReduce>}}, Floratou, Patel, Shekita, & Tata, VLDB
-  2001.
+  2011.
 
   {DREMEL} {{{http://research.google.com/pubs/archive/36632.pdf}<Dremel:
   Interactive Analysis of Web-Scale Datasets>}}, Melnik, Gubarev, Long,
